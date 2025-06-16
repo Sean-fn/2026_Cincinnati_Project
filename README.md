@@ -95,7 +95,7 @@ To launch a Gradio demo locally, please run the following commands one by one.
 `python -m llava.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40000 --worker http://localhost:40000 --model-path $M2F2-Det_checkpoint$
 `
 
-4. For a better user experience, please first checkout cropped images from ```utils/DDVQA_images/``` with the prompt "**Determine the authenticity of this image**".
+4. For a better user experience, please first check out cropped images from ```utils/DDVQA_images/``` with the prompt "**Determine the authenticity of this image**".
 
 ## Train 
 
@@ -123,22 +123,20 @@ bash stage_2_train.sh
 <details>
 <summary>Initialization</summary>
   
-We merge **LLaVA-1.5-7b** and **Stage-1 weights** to initialize **LLaVADeepfakeCasualLM**, which needs to modify `config.json` of the base model (_i.e._, LLaVA-1.5-7b). Refer to `LLaVA/examples/LLaVA_config.json` for details.
-
- Updated JSON file note:
+We merge **LLaVA-1.5-7b** and **Stage-1 weights** to initialize **LLaVADeepfakeCasualLM**, which needs to modify `config.json` of the base model (_i.e._, LLaVA-1.5-7b) as follows:
   
 ```json
 {
   "_name_or_path": "LLaVA-1.5-7b",
   ...
   "deepfake_model_name": "densenet121",  // Detector type, we provide the code base for densenet and efficient. 
-  "deepfake_model_path": "/path/to/your/Stage-1 weights",  // Stage-1 weights.
+  "deepfake_model_path": "/path/to/your/Stage-1 weights, such as efficient and densenet weights", 
   "mm_vision_select_feature": "cls_patch",  // Changed from 'patch' to 'cls_patch'
   ...
 }
 ```
 
-Also, it is also helpful to set ```low_cpu_mem_usage=False``` in around ```LLaVA/model/builder.py```#L246.
+We offer an available template and required pre-trained weights in [Google Drive](https://drive.google.com/drive/folders/1H0KcBQDu9-L0DMz0d66z1rabIy3FpGIH?usp=sharing). Also, it is also helpful to set ```low_cpu_mem_usage=False``` in around ```LLaVA/model/builder.py```#L246.
 </details>
 
 <details>
