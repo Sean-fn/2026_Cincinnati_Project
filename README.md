@@ -11,6 +11,9 @@
   
 This repository contains the implementation and datasets for the paper: Rethinking Vision-Language Model in Face Forensics: Multi-Modal Interpretable Forged Face Detector. The paper ([https://arxiv.org/abs/2204.00964](https://arxiv.org/pdf/2503.20188)) is presented in CVPR 2025 (Oral).
 
+<details>
+<summary>Abstract</summary>
+  
 > Deepfake detection is a long-established research topic vital for mitigating the spread of malicious misinformation.
 Unlike prior methods that provide either binary classification results or textual explanations separately, we introduce a novel method capable of generating both simultaneously. Our method harnesses the multi-modal learning
 capability of the pre-trained CLIP and the unprecedented
@@ -21,6 +24,8 @@ CLIP to improve generalization to unseen forgeries. Also,
 M2F2-Det incorporates an LLM to provide detailed textual explanations of its detection decisions, enhancing interpretability by bridging the gap between natural language
 and subtle cues of facial forgeries. Empirically, we evaluate M2F2-Det on both detection and explanation generation tasks, where it achieves state-of-the-art performance,
 demonstrating its effectiveness in identifying and explaining diverse forgeries.
+
+</details>
 
 <p align="center">
   <img src="asset/teaser.png" alt="Overview" width="700">
@@ -46,7 +51,7 @@ FF++_Face2Face_c40.h5
 **DDVQA**: we have provide a c40 version DDVQA in ```utils/DDVQA_images/c40.zip``` or one can download it from the DDVQA's [[Project Page]](https://github.com/Reality-Defender/Research-DD-VQA).
 
 ### Environment
-We build on the LLaVA-v1.5 environment, which can be created by
+We build on the environment based on LLaVA-v1.5, such as ```pytorch==2.0.1+cu117 torchvision==0.16.2```. It can be created by
 ```bash
 conda env create -f environment.yml
 ```
