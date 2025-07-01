@@ -4,12 +4,14 @@
   
 [![arXiv](https://img.shields.io/badge/Arxiv-2503.20188-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2503.20188) 
 [![License](https://img.shields.io/badge/License-MIT%20-yellow)](./LICENSE) 
+[![hf_space](https://img.shields.io/badge/🤗-Huggingface%20Checkpoint-blue.svg)](https://huggingface.co/CHELSEA234/llava-v1.5-7b-M2F2-Det)
+<br>
 ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=CHELSEA234.M2F2_Det)
-[![hf_space](https://img.shields.io/badge/🤗-Huggingface%20Checkpoint-blue.svg)](https://huggingface.co/zhipeixu/fakeshield-v1-22b)
+[![Home Page](https://img.shields.io/badge/project_page-m2f2_det-cyan)]([https://zhipeixu.github.io/projects/FakeShield/](https://m2f2-net.github.io/M2F2-Page/))
 
 </div>
   
-This repository contains the implementation and datasets for the paper: Rethinking Vision-Language Model in Face Forensics: Multi-Modal Interpretable Forged Face Detector. The paper ([https://arxiv.org/abs/2204.00964](https://arxiv.org/pdf/2503.20188)) is presented in CVPR 2025 (Oral).
+This repository contains the implementation and datasets for the paper: Rethinking Vision-Language Model in Face Forensics: Multi-Modal Interpretable Forged Face Detector. The paper ([ArXiv](https://arxiv.org/pdf/2503.20188)) is presented in CVPR 2025 (Oral), and our [project page](https://m2f2-net.github.io/M2F2-Page/) is available. 
 
 <details>
 <summary>Abstract</summary>
