@@ -7,11 +7,13 @@
 [![hf_space](https://img.shields.io/badge/🤗-Huggingface%20Checkpoint-blue.svg)](https://huggingface.co/CHELSEA234/llava-v1.5-7b-M2F2-Det)
 <br>
 ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=CHELSEA234.M2F2_Det)
-[![Home Page](https://img.shields.io/badge/project_page-m2f2_det-cyan)]([https://zhipeixu.github.io/projects/FakeShield/](https://m2f2-net.github.io/M2F2-Page/))
+[![Home Page](https://img.shields.io/badge/project_page-m2f2_det-cyan)](https://m2f2-net.github.io/M2F2-Page/)
 
 </div>
   
-This repository contains the implementation and datasets for the paper: Rethinking Vision-Language Model in Face Forensics: Multi-Modal Interpretable Forged Face Detector. The paper ([ArXiv](https://arxiv.org/pdf/2503.20188)) is presented in CVPR 2025 (Oral), and our [project page](https://m2f2-net.github.io/M2F2-Page/) is available. 
+This repository contains the implementation and datasets for the paper: Rethinking Vision-Language Model in Face Forensics: Multi-Modal Interpretable Forged Face Detector. 
+
+The paper ([ArXiv](https://arxiv.org/pdf/2503.20188)) is presented in CVPR 2025 (Oral), and our [project page](https://m2f2-net.github.io/M2F2-Page/) is available. 
 
 <details>
 <summary>Abstract</summary>
@@ -34,7 +36,8 @@ demonstrating its effectiveness in identifying and explaining diverse forgeries.
 </p>
 
 ## Updates
-* **[2025.06.13]** 🎉🎉🎉 The first version of the code is released. See you at CVPR25~
+* **[2025.07.10]** 🎉🎉🎉 Our [project page](https://m2f2-net.github.io/M2F2-Page/) is available.~
+* **[2025.06.13]** 🎉🎉🎉 The first version of the code is released. See you at CVPR25.~
 
 ## Setup
 ### Dataset
