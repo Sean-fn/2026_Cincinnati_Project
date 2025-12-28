@@ -155,7 +155,8 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         vision_tower = model.get_vision_tower()
         if not vision_tower.is_loaded:
             vision_tower.load_model(device_map=device_map)
-        if device_map != 'auto':
+        # Skip .to() for quantized models as they're already on the correct device
+        if device_map != 'auto' and not (load_4bit or load_8bit):
             vision_tower.to(device=device_map, dtype=torch.float16)
         image_processor = vision_tower.image_processor
 
@@ -183,6 +184,8 @@ def load_deepfake_model(model_path, model_base, model_name, load_8bit=False, loa
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type='nf4'
         )
+        # Use explicit device_map to avoid meta device issues with custom layers
+        kwargs['device_map'] = {"": device}
     else:
         kwargs['torch_dtype'] = torch.float16
 
@@ -198,7 +201,9 @@ def load_deepfake_model(model_path, model_base, model_name, load_8bit=False, loa
             lora_cfg_pretrained = LlavaConfig.from_pretrained(model_path)
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
             print('Loading LLaVA from base model...')
-            model = LlavaLlamaForCausalLMDeepfake.from_pretrained(model_base, low_cpu_mem_usage=False, config=lora_cfg_pretrained, **kwargs)
+            # Set low_cpu_mem_usage=True when using quantization (required for device_map)
+            low_cpu_mem = True if (load_4bit or load_8bit) else False
+            model = LlavaLlamaForCausalLMDeepfake.from_pretrained(model_base, low_cpu_mem_usage=low_cpu_mem, config=lora_cfg_pretrained, **kwargs)
             token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
             if model.lm_head.weight.shape[0] != token_num:
                 model.lm_head.weight = torch.nn.Parameter(torch.empty(token_num, tokem_dim, device=model.device, dtype=model.dtype))
@@ -233,7 +238,9 @@ def load_deepfake_model(model_path, model_base, model_name, load_8bit=False, loa
             print('Loading LLaVA from base model...')
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
             cfg_pretrained = AutoConfig.from_pretrained(model_path)
-            model = LlavaLlamaForCausalLMDeepfake.from_pretrained(model_base, low_cpu_mem_usage=False, config=cfg_pretrained, **kwargs)
+            # Set low_cpu_mem_usage=True when using quantization (required for device_map)
+            low_cpu_mem = True if (load_4bit or load_8bit) else False
+            model = LlavaLlamaForCausalLMDeepfake.from_pretrained(model_base, low_cpu_mem_usage=low_cpu_mem, config=cfg_pretrained, **kwargs)
 
             mm_projector_weights = torch.load(os.path.join(model_path, 'mm_projector.bin'), map_location='cpu')
             mm_projector_weights = {k: v.to(torch.float16) for k, v in mm_projector_weights.items()}
@@ -241,9 +248,11 @@ def load_deepfake_model(model_path, model_base, model_name, load_8bit=False, loa
             print(f'Loading mm projector weights {mm_projector_weights.keys()}.\n Unexpected keys: {keys[1]}.')
         else:
             tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
+            # Set low_cpu_mem_usage=True when using quantization (required for device_map)
+            low_cpu_mem = True if (load_4bit or load_8bit) else False
             model = LlavaLlamaForCausalLMDeepfake.from_pretrained(
                 model_path,
-                low_cpu_mem_usage=False,
+                low_cpu_mem_usage=low_cpu_mem,
                 **kwargs
             )
     else:
@@ -264,7 +273,8 @@ def load_deepfake_model(model_path, model_base, model_name, load_8bit=False, loa
         vision_tower = model.get_vision_tower()
         if not vision_tower.is_loaded:
             vision_tower.load_model(device_map=device_map)
-        if device_map != 'auto':
+        # Skip .to() for quantized models as they're already on the correct device
+        if device_map != 'auto' and not (load_4bit or load_8bit):
             vision_tower.to(device=device_map, dtype=torch.float16)
         image_processor = vision_tower.image_processor
 
@@ -373,7 +383,8 @@ def load_deepfake_dummy_model(model_path, model_base, model_name, load_8bit=Fals
         vision_tower = model.get_vision_tower()
         if not vision_tower.is_loaded:
             vision_tower.load_model(device_map=device_map)
-        if device_map != 'auto':
+        # Skip .to() for quantized models as they're already on the correct device
+        if device_map != 'auto' and not (load_4bit or load_8bit):
             vision_tower.to(device=device_map, dtype=torch.float16)
         image_processor = vision_tower.image_processor
 

@@ -39,7 +39,15 @@ def main(args):
     model_name = get_model_name_from_path(args.model_path)
     tokenizer, model, image_processor, context_len = load_deepfake_model(args.model_path, args.model_base, model_name, args.load_8bit, args.load_4bit, device=args.device)
     model.eval()
-    model = model.to('cuda')
+    # For quantized models, move only the non-quantized custom layers to CUDA
+    # The main LLM is already on CUDA from bitsandbytes quantization
+    if args.load_4bit or args.load_8bit:
+        model.deepfake_encoder.to('cuda', dtype=torch.float16)
+        model.deepfake_projector.to('cuda', dtype=torch.float16)
+        model.get_model().mm_projector.to('cuda', dtype=torch.float16)
+        model.get_vision_tower().to('cuda', dtype=torch.float16)
+    else:
+        model = model.to('cuda')
     model.load_deepfake_encoder(model.config.deepfake_model_path, verbose=True)    
 
     eccv_dataset_root = './utils/DDVQA_images/c40/test'

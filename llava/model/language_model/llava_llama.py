@@ -454,7 +454,11 @@ class LlavaLlamaForCausalLMDummy(LlamaForCausalLM, LlavaMetaForCausalLM):
                 else:
                     raise ValueError(f"Unexpected mm_patch_merge_type: {self.config.mm_patch_merge_type}")
             else:
-                vision_input = images.to(self.device, dtype=self.get_model().mm_projector[0].weight.dtype)
+                # Use explicit float16 for vision input to avoid dtype issues with quantized models
+                vision_dtype = torch.float16 if not hasattr(self.get_model().mm_projector[0].weight, 'dtype') or \
+                               self.get_model().mm_projector[0].weight.dtype == torch.uint8 else \
+                               self.get_model().mm_projector[0].weight.dtype
+                vision_input = images.to(self.device, dtype=vision_dtype)
                 image_features = self.encode_images(vision_input)
         
         if deepfake_inputs is not None:
@@ -611,9 +615,9 @@ class LlavaLlamaForCausalLMDeepfake(LlamaForCausalLM, LlavaMetaForCausalLM):
             # deepfake_encoder_name=config.deepfake_model_name,
             vision_model_name=config.mm_vision_tower,
             text_model_name=config.mm_vision_tower,
-            vision_dtype=torch.bfloat16,
-            text_dtype=torch.bfloat16,
-            deepfake_dtype=torch.bfloat16,
+            vision_dtype=torch.float16,
+            text_dtype=torch.float16,
+            deepfake_dtype=torch.float16,
             load_vision_encoder=False,
             pretrained=False
         )
@@ -631,11 +635,13 @@ class LlavaLlamaForCausalLMDeepfake(LlamaForCausalLM, LlavaMetaForCausalLM):
             raise ValueError("Only cls_patch is supported for mm_vision_select_feature.")
         
     def load_deepfake_encoder(self, model_path, verbose=True):
-        ckpt = torch.load(model_path)
+        ckpt = torch.load(model_path, map_location='cpu')
         state_dict = dict()
+        # Get the device of the deepfake_encoder
+        target_device = next(self.deepfake_encoder.parameters()).device
         for k, v in self.deepfake_encoder.state_dict().items():
             if k in ckpt:
-                state_dict[k] = ckpt[k].to(v.dtype)
+                state_dict[k] = ckpt[k].to(dtype=v.dtype, device=target_device)
         missing_keys, unexpected_keys = self.deepfake_encoder.load_state_dict(state_dict, strict=False)
         if verbose:
             print('Load deepfake encoder')
@@ -650,8 +656,8 @@ class LlavaLlamaForCausalLMDeepfake(LlamaForCausalLM, LlavaMetaForCausalLM):
     def encode_deepfake_tokens(self, deepfake_inputs):
         out = self.deepfake_encoder(**deepfake_inputs).unsqueeze(1)    # [B, 1, 2]
         out = F.softmax(out, dim=-1)
-        
-        out = out.to(self.deepfake_projector[0].weight.dtype)
+
+        out = out.to(torch.float16)
         if self.deepfake_replicate:
             out = torch.repeat_interleave(out, 200, dim=1)
         # print(f'Prob: {out}')
@@ -852,7 +858,11 @@ class LlavaLlamaForCausalLMDeepfake(LlamaForCausalLM, LlavaMetaForCausalLM):
                 else:
                     raise ValueError(f"Unexpected mm_patch_merge_type: {self.config.mm_patch_merge_type}")
             else:
-                vision_input = images.to(self.device, dtype=self.get_model().mm_projector[0].weight.dtype)
+                # Use explicit float16 for vision input to avoid dtype issues with quantized models
+                vision_dtype = torch.float16 if not hasattr(self.get_model().mm_projector[0].weight, 'dtype') or \
+                               self.get_model().mm_projector[0].weight.dtype == torch.uint8 else \
+                               self.get_model().mm_projector[0].weight.dtype
+                vision_input = images.to(self.device, dtype=vision_dtype)
                 v_image_features, image_features = self.encode_images_multimodal_features(vision_input)
         image_cls = None
         if self.config.mm_vision_select_feature == 'cls_patch':
