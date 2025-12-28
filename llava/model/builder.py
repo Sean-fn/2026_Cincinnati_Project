@@ -31,10 +31,17 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
 
     if load_8bit:
         kwargs['load_in_8bit'] = True
+        kwargs['quantization_config'] = BitsAndBytesConfig(
+            load_in_8bit=True,
+            llm_int8_skip_modules=["mm_projector"],
+            llm_int8_threshold=6.0,
+            llm_int8_has_fp16_weight=False,
+        )
     elif load_4bit:
         kwargs['load_in_4bit'] = True
         kwargs['quantization_config'] = BitsAndBytesConfig(
             load_in_4bit=True,
+            llm_int8_skip_modules=["mm_projector"],
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type='nf4'
@@ -176,10 +183,19 @@ def load_deepfake_model(model_path, model_base, model_name, load_8bit=False, loa
 
     if load_8bit:
         kwargs['load_in_8bit'] = True
+        kwargs['quantization_config'] = BitsAndBytesConfig(
+            load_in_8bit=True,
+            llm_int8_skip_modules=["mm_projector", "deepfake_projector", "deepfake_encoder"],
+            llm_int8_threshold=6.0,
+            llm_int8_has_fp16_weight=False,
+        )
+        # Use explicit device_map to avoid meta device issues with custom layers
+        kwargs['device_map'] = {"": device}
     elif load_4bit:
         kwargs['load_in_4bit'] = True
         kwargs['quantization_config'] = BitsAndBytesConfig(
             load_in_4bit=True,
+            llm_int8_skip_modules=["mm_projector", "deepfake_projector", "deepfake_encoder"],
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type='nf4'
@@ -294,14 +310,25 @@ def load_deepfake_dummy_model(model_path, model_base, model_name, load_8bit=Fals
 
     if load_8bit:
         kwargs['load_in_8bit'] = True
+        kwargs['quantization_config'] = BitsAndBytesConfig(
+            load_in_8bit=True,
+            llm_int8_skip_modules=["mm_projector"],
+            llm_int8_threshold=6.0,
+            llm_int8_has_fp16_weight=False,
+        )
+        # Use explicit device_map to avoid meta device issues with custom layers
+        kwargs['device_map'] = {"": device}
     elif load_4bit:
         kwargs['load_in_4bit'] = True
         kwargs['quantization_config'] = BitsAndBytesConfig(
             load_in_4bit=True,
+            llm_int8_skip_modules=["mm_projector"],
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type='nf4'
         )
+        # Use explicit device_map to avoid meta device issues with custom layers
+        kwargs['device_map'] = {"": device}
     else:
         kwargs['torch_dtype'] = torch.float16
 
