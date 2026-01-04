@@ -68,6 +68,23 @@ class ModelArguments:
     mm_vision_select_feature: Optional[str] = field(default="patch")
     deepfake_ckpt_path: Optional[str]= field(default=None)
     tune_deepfake_mlp_adapter: bool = field(default=False)
+    # KAN projector configuration
+    deepfake_projector_type: str = field(
+        default='mlp2x_gelu',
+        metadata={"help": "Type of deepfake projector: 'mlp2x_gelu' or 'efficient_kan'"}
+    )
+    kan_hidden_dim: int = field(
+        default=128,
+        metadata={"help": "Hidden dimension for KAN projector"}
+    )
+    kan_grid_size: int = field(
+        default=5,
+        metadata={"help": "Grid size for KAN B-splines"}
+    )
+    kan_spline_order: int = field(
+        default=3,
+        metadata={"help": "Spline order for KAN (3 = cubic)"}
+    )
 
 
 @dataclass
@@ -861,7 +878,7 @@ def train(attn_implementation=None):
             quantization_config=BitsAndBytesConfig(
                 load_in_4bit=training_args.bits == 4,
                 load_in_8bit=training_args.bits == 8,
-                llm_int8_skip_modules=["mm_projector"],
+                llm_int8_skip_modules=["mm_projector", "vision_tower", "deepfake_encoder", "deepfake_projector"],
                 llm_int8_threshold=6.0,
                 llm_int8_has_fp16_weight=False,
                 bnb_4bit_compute_dtype=compute_dtype,
@@ -1008,11 +1025,39 @@ def train(attn_implementation=None):
     
     # deepfake encoders
     deepfake_ckpt_path = model_args.deepfake_ckpt_path
-    model.load_deepfake_encoder(deepfake_ckpt_path, verbose=True)
+    model.load_deepfake_encoder(
+        deepfake_ckpt_path,
+        verbose=True,
+        device=training_args.device,
+        dtype=torch.bfloat16 if training_args.bf16 else torch.float16
+    )
     for p in model.deepfake_encoder.parameters():
         p.requires_grad = False
-    
-    # deepfake projectors
+    ################
+    # Here's a significant issue: KAN only activated when deepfake_projector recreated from scratch 
+    # only when model is loaded with 4-bit or 8-bit quantization.
+    ###############
+
+    # deepfake projectors - re-create if on meta device (happens with 4-bit quantization)
+    if training_args.bits in [4, 8]:
+        first_proj_param = next(model.deepfake_projector.parameters())
+        if first_proj_param.device.type == 'meta':
+            print('Deepfake projector is on meta device, re-initializing...')
+            from llava.model.multimodal_projector.builder import build_multimodal_projector
+            projector_type = getattr(model.config, 'deepfake_projector_type', 'mlp2x_gelu')
+            kan_hidden_dim = getattr(model.config, 'kan_hidden_dim', 128)
+            kan_grid_size = getattr(model.config, 'kan_grid_size', 5)
+            kan_spline_order = getattr(model.config, 'kan_spline_order', 3)
+            model.deepfake_projector = build_multimodal_projector(
+                model.config,
+                projector_type=projector_type,
+                multimodal_hidden_size=2,
+                kan_hidden_dim=kan_hidden_dim,
+                kan_grid_size=kan_grid_size,
+                kan_spline_order=kan_spline_order,
+            ).to(dtype=compute_dtype, device=training_args.device)
+            print(f'Re-created deepfake projector: {type(model.deepfake_projector).__name__}')
+
     if model_args.tune_deepfake_mlp_adapter:
         for p in model.deepfake_projector.parameters():
             p.requires_grad = True
@@ -1053,7 +1098,7 @@ def train(attn_implementation=None):
                     **data_module)
 
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
-        trainer.train(resume_from_checkpoint=True)
+        trainer.train(resume_from_checkpoint=False)
     else:
         trainer.train()
     trainer.save_state()
@@ -1078,4 +1123,6 @@ def train(attn_implementation=None):
 
 
 if __name__ == "__main__":
-    train(attn_implementation='flash_attention_2')
+    # Use 'eager' if flash_attention_2 is not available
+    # Options: 'flash_attention_2', 'sdpa', 'eager'
+    train(attn_implementation='eager')

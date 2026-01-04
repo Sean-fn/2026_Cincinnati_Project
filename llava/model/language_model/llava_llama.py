@@ -617,7 +617,7 @@ class LlavaLlamaForCausalLMDeepfake(LlamaForCausalLM, LlavaMetaForCausalLM):
             text_model_name=config.mm_vision_tower,
             vision_dtype=torch.float16,
             text_dtype=torch.float16,
-            deepfake_dtype=torch.float16,
+            deepfake_dtype=torch.float32,  # BatchNorm requires fp32
             load_vision_encoder=False,
             pretrained=False
         )
@@ -625,23 +625,63 @@ class LlavaLlamaForCausalLMDeepfake(LlamaForCausalLM, LlavaMetaForCausalLM):
             p.requires_grad = False
         for p in self.model.vision_tower.parameters():
             p.requires_grad = False
-        self.deepfake_projector = build_multimodal_projector(config, projector_type='mlp2x_gelu', multimodal_hidden_size=2)
+        # Build deepfake projector (MLP or KAN based on config)
+        projector_type = getattr(config, 'deepfake_projector_type', 'mlp2x_gelu')
+        kan_hidden_dim = getattr(config, 'kan_hidden_dim', 128)
+        kan_grid_size = getattr(config, 'kan_grid_size', 5)
+        kan_spline_order = getattr(config, 'kan_spline_order', 3)
+        self.deepfake_projector = build_multimodal_projector(
+            config,
+            projector_type=projector_type,
+            multimodal_hidden_size=2,
+            kan_hidden_dim=kan_hidden_dim,
+            kan_grid_size=kan_grid_size,
+            kan_spline_order=kan_spline_order,
+        )
         # Initialize weights and apply final processing
-        self.processors = {
-            "clip_processor": self.get_vision_tower().image_processor,
-            "deepfake_processor": self.get_vision_tower().image_processor,
-        }
+        self._processors = None  # Lazy initialization
         if self.config.mm_vision_select_feature != "cls_patch":
             raise ValueError("Only cls_patch is supported for mm_vision_select_feature.")
-        
-    def load_deepfake_encoder(self, model_path, verbose=True):
+
+    @property
+    def processors(self):
+        """Lazy initialization of processors to avoid accessing image_processor before vision tower is loaded."""
+        if self._processors is None:
+            self._processors = {
+                "clip_processor": self.get_vision_tower().image_processor,
+                "deepfake_processor": self.get_vision_tower().image_processor,
+            }
+        return self._processors
+
+    def load_deepfake_encoder(self, model_path, verbose=True, device='cuda', dtype=torch.float32):
         ckpt = torch.load(model_path, map_location='cpu')
+
+        # Check if deepfake_encoder is on meta device (happens with 4-bit quantization)
+        first_param = next(self.deepfake_encoder.parameters())
+        is_meta = first_param.device.type == 'meta'
+
+        if is_meta:
+            if verbose:
+                print('Deepfake encoder is on meta device, re-initializing...')
+            # Re-create the deepfake_encoder on proper device
+            from llava.model.deepfake.M2F2Det.model import M2F2Det
+            config = self.config
+            deepfake_model_name = getattr(config, 'deepfake_model_name', 'densenet121')
+            self.deepfake_encoder = M2F2Det(backbone_model=deepfake_model_name)
+            self.deepfake_encoder = self.deepfake_encoder.to(device=device, dtype=dtype)
+            target_device = device
+            target_dtype = dtype
+        else:
+            target_device = first_param.device
+            target_dtype = first_param.dtype
+
+        # Build state dict matching encoder keys
         state_dict = dict()
-        # Get the device of the deepfake_encoder
-        target_device = next(self.deepfake_encoder.parameters()).device
-        for k, v in self.deepfake_encoder.state_dict().items():
+        encoder_keys = set(self.deepfake_encoder.state_dict().keys())
+        for k in encoder_keys:
             if k in ckpt:
-                state_dict[k] = ckpt[k].to(dtype=v.dtype, device=target_device)
+                state_dict[k] = ckpt[k].to(dtype=target_dtype, device=target_device)
+
         missing_keys, unexpected_keys = self.deepfake_encoder.load_state_dict(state_dict, strict=False)
         if verbose:
             print('Load deepfake encoder')

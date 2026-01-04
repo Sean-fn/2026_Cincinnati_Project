@@ -51,9 +51,44 @@ def build_vision_projector(config, delay_load=False, **kwargs):
     raise ValueError(f'Unknown projector type: {projector_type}')
 
 
-def build_multimodal_projector(config, projector_type='mlp2x_gelu', multimodal_hidden_size=2, delay_load=False, **kwargs):
+def build_multimodal_projector(
+    config,
+    projector_type='mlp2x_gelu',
+    multimodal_hidden_size=2,
+    kan_hidden_dim=128,
+    kan_grid_size=5,
+    kan_spline_order=3,
+    delay_load=False,
+    **kwargs
+):
+    """
+    Build a multimodal projector for mapping deepfake features to LLM space.
+
+    Args:
+        config: Model configuration with hidden_size attribute
+        projector_type: Type of projector ('linear', 'mlp2x_gelu', 'efficient_kan', 'identity')
+        multimodal_hidden_size: Input dimension (default: 2 for deepfake probabilities)
+        kan_hidden_dim: Hidden dimension for KAN projector (default: 128)
+        kan_grid_size: Grid size for KAN B-splines (default: 5)
+        kan_spline_order: Spline order for KAN (default: 3)
+        delay_load: Whether to delay loading (unused, kept for API compatibility)
+
+    Returns:
+        nn.Module: The constructed projector
+    """
     if projector_type == 'linear':
         return nn.Linear(multimodal_hidden_size, config.hidden_size)
+
+    # Efficient KAN projector for enhanced expressiveness with lower VRAM
+    if projector_type == 'efficient_kan':
+        from .efficient_kan import EfficientKANProjector
+        return EfficientKANProjector(
+            input_dim=multimodal_hidden_size,
+            hidden_dim=kan_hidden_dim,
+            output_dim=config.hidden_size,
+            grid_size=kan_grid_size,
+            spline_order=kan_spline_order,
+        )
 
     mlp_gelu_match = re.match(r'^mlp(\d+)x_gelu$', projector_type)
     if mlp_gelu_match:

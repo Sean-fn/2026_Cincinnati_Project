@@ -185,7 +185,8 @@ class M2F2Det(nn.Module):
         clip_text_features = self.text_proj(clip_text_features)
         clip_vision_cls, clip_vision_patches = clip_vision_features[:, 0, :], clip_vision_features[:, 1:, :]
         clip_scores = F.cosine_similarity(clip_vision_patches, clip_text_features.unsqueeze(1).repeat(B, clip_vision_patches.shape[1], 1), dim=-1)
-        deepfake_features = self.deepfake_encoder(new_embeds.to(self.deepfake_dtype).to(next(self.deepfake_encoder.parameters()).device))
+        encoder_dtype = next(self.deepfake_encoder.parameters()).dtype
+        deepfake_features = self.deepfake_encoder(new_embeds.to(encoder_dtype).to(next(self.deepfake_encoder.parameters()).device))
         deepfake_features = self.avgpool2d(deepfake_features).view(B, -1)
         deepfake_features = self.deepfake_proj(deepfake_features)
         clip_vision_cls = self.clip_vision_alpha * clip_vision_cls
