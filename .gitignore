@@ -1,6 +1,26 @@
 playground/data/deepfake
 playground/data/imdl
 wandb/
+
+init.sh
+
+# Large model files (download from Hugging Face)
+checkpoints/
+model/
+!llava/model/
+!llava/model/**
+utils/weights/*.pth
+utils/weights/*.pt
+
+# Dataset files (can be in Git or download separately)
+# utils/DDVQA_images/  # Uncomment if images are too large for Git
+*.h5
+
+# Outputs and temporary files
+outputs/
+test_output_dry_run/
+.verified_locally
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 **/__pycache__/
