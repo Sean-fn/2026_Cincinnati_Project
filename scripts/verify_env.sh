@@ -16,25 +16,38 @@ python --version || python3 --version
 echo -e "\n[2/7] 检查关键依赖..."
 python -c "
 import sys
+from importlib import metadata, util
+
 packages = {
-    'torch': None,
-    'torchvision': None,
-    'transformers': None,
-    'deepspeed': None,
-    'peft': None,
-    'PIL': 'Pillow',
-    'cv2': 'opencv-python',
+    'torch': ('torch', 'torch'),
+    'torchvision': ('torchvision', 'torchvision'),
+    'transformers': ('transformers', 'transformers'),
+    'deepspeed': ('deepspeed', 'deepspeed'),
+    'peft': ('peft', 'peft'),
+    'PIL': ('PIL', 'Pillow'),
+    'cv2': ('cv2', 'opencv-python'),
 }
 
 missing = []
-for pkg, pip_name in packages.items():
+for module_name, dist_name in packages.values():
+    if util.find_spec(module_name) is None:
+        missing.append(dist_name)
+        print(f'✗ {module_name}: NOT INSTALLED')
+        continue
     try:
-        mod = __import__(pkg)
-        version = getattr(mod, '__version__', 'unknown')
-        print(f'✓ {pkg}: {version}')
-    except ImportError:
-        missing.append(pip_name or pkg)
-        print(f'✗ {pkg}: NOT INSTALLED')
+        version = metadata.version(dist_name)
+    except metadata.PackageNotFoundError:
+        version = 'unknown'
+    print(f'✓ {module_name}: {version}')
+
+try:
+    numpy_version = metadata.version('numpy')
+    major = int(numpy_version.split('.')[0])
+    if major >= 2:
+        print(f'⚠️  numpy版本为{numpy_version}，部分扩展可能需要降级到numpy<2')
+except metadata.PackageNotFoundError:
+    print('✗ numpy: NOT INSTALLED')
+    missing.append('numpy')
 
 if missing:
     print(f'\n缺少依赖: {missing}')
