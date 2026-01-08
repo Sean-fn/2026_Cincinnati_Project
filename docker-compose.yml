@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  m2f2-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: m2f2-det:latest
+    container_name: m2f2-dev
+
+    # GPU配置
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    # 挂载代码目录（实时同步修改）
+    volumes:
+      - .:/workspace/M2F2_Det
+      - ./checkpoints:/workspace/M2F2_Det/checkpoints
+      - ./utils:/workspace/M2F2_Det/utils
+      - ./outputs:/workspace/M2F2_Det/outputs
+
+    # 端口映射
+    ports:
+      - "7860:7860"  # Gradio
+      - "8888:8888"  # Jupyter
+
+    # 环境变量
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONPATH=/workspace/M2F2_Det
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+
+    # 保持容器运行
+    stdin_open: true
+    tty: true
+
+    # 工作目录
+    working_dir: /workspace/M2F2_Det
+
+    # 默认命令
+    command: /bin/bash
