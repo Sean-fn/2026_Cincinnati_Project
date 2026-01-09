@@ -78,7 +78,7 @@ CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --tf32 True \
     --model_max_length 2048 \
     --gradient_checkpointing True \
-    --dataloader_num_workers 8 \
+    --dataloader_num_workers 4 \
     --lazy_preprocess True
 
 echo "========================================"

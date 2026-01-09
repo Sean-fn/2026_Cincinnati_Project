@@ -15,11 +15,17 @@ case $ENV_TYPE in
     python3 -m venv venv
     source venv/bin/activate
 
-    log_step "升级 pip"
-    pip install --upgrade pip
+    log_step "升级 pip/setuptools/wheel"
+    pip install --upgrade pip setuptools wheel
+
+    log_step "安装 PyTorch (cu121)"
+    pip install torch==2.1.2+cu121 torchvision==0.16.2+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
+
+    log_step "预装 flash-attn 依赖 (psutil)"
+    pip install psutil
 
     log_step "安装依赖 (requirements.txt)"
-    pip install -r requirements.txt
+    pip install -r requirements.txt --no-build-isolation
 
     log_ok "venv 环境配置完成"
     echo "激活环境: source venv/bin/activate"
