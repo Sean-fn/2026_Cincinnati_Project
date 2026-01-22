@@ -9,7 +9,6 @@
 set -e
 
 # Activate environment
-source /home/naeem/sean/M2F2_Det/venv/bin/activate
 current_path=$(pwd)
 export PYTHONPATH="$current_path:$PYTHONPATH"
 
