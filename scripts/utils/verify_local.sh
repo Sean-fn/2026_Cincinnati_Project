@@ -27,7 +27,7 @@ echo -e "\n[3/6] 检查关键文件..."
 FILES=(
     "llava/model/deepfake/M2F2Det/model.py"
     "llava/train/train_deepfake.py"
-    "scripts/finetune_stage_2.sh"
+    "scripts/original/finetune_stage_2.sh"
     "checkpoints/llava-v1.5-7b/config.json"
 )
 

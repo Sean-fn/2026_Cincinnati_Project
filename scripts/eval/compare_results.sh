@@ -14,13 +14,13 @@ echo ""
 # Check if result files exist
 if [ ! -f "outputs/DDVQA/DDVQA_det_c40_kan.jsonl" ]; then
     echo "❌ KAN+QLoRA detection results not found!"
-    echo "   Run: bash scripts/eval_kan_qlora.sh"
+    echo "   Run: bash scripts/kan/eval.sh"
     exit 1
 fi
 
 if [ ! -f "outputs/DDVQA/DDVQA_det_c40_original.jsonl" ]; then
     echo "❌ Original detection results not found!"
-    echo "   Run: bash scripts/eval_original.sh"
+    echo "   Run: bash scripts/eval/eval_original.sh"
     exit 1
 fi
 

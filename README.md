@@ -162,7 +162,7 @@ python scripts/merge_lora_weights_deepfake_random.py \
 
 Using **Stage-2-init-weights**, the following trains MLP layers and results in **Stage-2-weights-Delta**.
 ```bash
-bash scripts/finetune_stage_2.sh
+bash scripts/original/finetune_stage_2.sh
 ```
 
 Key parameters to modify in the script:
@@ -199,9 +199,9 @@ bash stage_3_train.sh
 <details>
 <summary>LoRA</summary>
   
-Using the **Stage-2-weights**, the following command conducts the LoRA fine-tuning to generate **Stage-3-weights-Delta**. 
+Using the **Stage-2-weights**, the following command conducts the LoRA fine-tuning to generate **Stage-3-weights-Delta**.
 ```bash
-bash scripts/finetune_stage_3.sh
+bash scripts/original/finetune_stage_3.sh
 ```
 
 Key parameters to modify in the script:

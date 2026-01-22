@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 ```bash
 # 快速验证（不运行训练）
-bash scripts/verify_env.sh
+bash scripts/utils/verify_env.sh
 ```
 
 这个脚本会检查：
@@ -64,7 +64,7 @@ pip install huggingface_hub
 huggingface-cli login
 
 # 上传模型权重（~16GB，需要时间）
-bash scripts/upload_to_huggingface.sh YOUR_HF_USERNAME
+bash scripts/huggingface/upload_to_huggingface.sh YOUR_HF_USERNAME
 
 # 上传内容：
 # - checkpoints/llava-1.5-7b-deepfake-rand-proj-v1/ (14GB)
@@ -106,7 +106,7 @@ cd M2F2_Det
 
 ```bash
 # 从Hugging Face下载模型权重
-bash scripts/download_from_huggingface.sh Sean-fn
+bash scripts/huggingface/download_from_huggingface.sh Sean-fn
 
 # 这会下载：
 # - checkpoints/llava-1.5-7b-deepfake-rand-proj-v1/
@@ -117,7 +117,7 @@ bash scripts/download_from_huggingface.sh Sean-fn
 
 ```bash
 # 检查所有文件是否就绪
-bash scripts/verify_env.sh
+bash scripts/utils/verify_env.sh
 ```
 
 ---
@@ -134,7 +134,7 @@ docker-compose build
 docker-compose run --rm m2f2-dev
 
 # 在容器内运行训练
-bash scripts/finetune_kan_qlora.sh
+bash scripts/kan/stage_2_3_combined.sh
 ```
 
 #### 方案B：直接使用Python环境
@@ -148,7 +148,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # 运行训练
-bash scripts/finetune_kan_qlora.sh
+bash scripts/kan/stage_2_3_combined.sh
 ```
 
 ---
@@ -180,7 +180,7 @@ M2F2_Det/
 
 ## 🔧 32GB VRAM优化配置
 
-`scripts/finetune_kan_qlora.sh` 已针对32GB VRAM优化：
+`scripts/kan/stage_2_3_combined.sh` 已针对32GB VRAM优化：
 
 ```bash
 --bits 4                           # 4-bit量化（节省75%显存）
@@ -213,13 +213,13 @@ M2F2_Det/
 ```bash
 # 本地
 vim llava/model/xxx.py
-bash scripts/verify_env.sh
+bash scripts/utils/verify_env.sh
 git add . && git commit -m "fix bug" && git push
 
 # 远程
 cd M2F2_Det
 git pull
-bash scripts/finetune_kan_qlora.sh
+bash scripts/kan/stage_2_3_combined.sh
 ```
 
 ### 场景2：更新模型权重
@@ -227,11 +227,11 @@ bash scripts/finetune_kan_qlora.sh
 ```bash
 # 本地
 # （训练完成后得到新权重）
-bash scripts/upload_to_huggingface.sh YOUR_HF_USERNAME
+bash scripts/huggingface/upload_to_huggingface.sh YOUR_HF_USERNAME
 
 # 远程
 cd M2F2_Det
-bash scripts/download_from_huggingface.sh YOUR_HF_USERNAME
+bash scripts/huggingface/download_from_huggingface.sh YOUR_HF_USERNAME
 ```
 
 ### 场景3：从零开始部署
@@ -240,16 +240,16 @@ bash scripts/download_from_huggingface.sh YOUR_HF_USERNAME
 # 本地（首次）
 git clone https://github.com/YOUR_USERNAME/M2F2_Det.git
 cd M2F2_Det
-bash scripts/verify_env.sh
-bash scripts/upload_to_huggingface.sh YOUR_HF_USERNAME
+bash scripts/utils/verify_env.sh
+bash scripts/huggingface/upload_to_huggingface.sh YOUR_HF_USERNAME
 git add . && git commit -m "init" && git push
 
 # 远程（首次）
 git clone https://github.com/YOUR_USERNAME/M2F2_Det.git
 cd M2F2_Det
-bash scripts/download_from_huggingface.sh YOUR_HF_USERNAME
-bash scripts/verify_env.sh
-bash scripts/finetune_kan_qlora.sh
+bash scripts/huggingface/download_from_huggingface.sh YOUR_HF_USERNAME
+bash scripts/utils/verify_env.sh
+bash scripts/kan/stage_2_3_combined.sh
 ```
 
 ---

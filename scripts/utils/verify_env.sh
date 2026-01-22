@@ -75,7 +75,7 @@ FILES=(
     "llava/model/deepfake/M2F2Det/model.py"
     "llava/train/train_deepfake.py"
     "llava/model/builder.py"
-    "scripts/finetune_kan_qlora.sh"
+    "scripts/kan/stage_2_3_combined.sh"
 )
 
 for file in "${FILES[@]}"; do

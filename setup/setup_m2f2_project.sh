@@ -314,7 +314,7 @@ echo "  3) 评估结果: ${BOLD}python eval/eval_judgement.py${RESET}"
 
 echo ""
 log_info "低显存训练 (KAN + QLoRA):"
-echo "  - 运行命令: ${BOLD}bash scripts/finetune_kan_qlora.sh${RESET}"
+echo "  - 运行命令: ${BOLD}bash scripts/kan/stage_2_3_combined.sh${RESET}"
 
 echo ""
 log_info "文档资源:"

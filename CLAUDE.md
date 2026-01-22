@@ -59,7 +59,7 @@ Runs `stage_1_detection.py` which trains the M2F2Det model on FF++ dataset.
 
 First, merge LLaVA-1.5-7b with Stage-1 weights:
 ```bash
-python scripts/merge_lora_weights_deepfake_random.py \
+python scripts/utils/merge_lora_weights_deepfake_random.py \
   --model-path /path/to/llava-v1.5-7b \
   --save-model-path ./checkpoints/llava-1.5-7b-deepfake-rand-proj-v1
 ```
@@ -70,8 +70,8 @@ bash stage_2_train.sh
 ```
 
 This script:
-1. Calls `scripts/merge_lora_weights_deepfake_random.py` to initialize weights
-2. Runs `scripts/finetune_stage_2.sh` via DeepSpeed
+1. Calls `scripts/utils/merge_lora_weights_deepfake_random.py` to initialize weights
+2. Runs `scripts/original/finetune_stage_2.sh` via DeepSpeed
 3. Key parameters: `--tune_deepfake_mlp_adapter True`, `--freeze_mm_mlp_adapter True`
 
 ### Stage 3: LoRA Fine-tuning
@@ -82,7 +82,7 @@ bash stage_3_train.sh
 
 This script:
 1. Merges Stage-2 delta weights with base model
-2. Runs `scripts/finetune_stage_3.sh` with LoRA enabled
+2. Runs `scripts/original/finetune_stage_3.sh` with LoRA enabled
 3. Merges final LoRA delta weights to produce M2F2-Det checkpoint
 
 ## Inference Commands
@@ -164,7 +164,7 @@ When initializing LLaVADeepfakeCasualLM, modify the base LLaVA-1.5-7b config.jso
 
 ### DeepSpeed Configuration
 
-Training scripts use DeepSpeed Zero-2 (`scripts/zero2.json`). Multi-GPU training via:
+Training scripts use DeepSpeed Zero-2 (`scripts/config/zero2.json`). Multi-GPU training via:
 ```bash
 deepspeed --include localhost:1,2,3,4,5,7 --master_port 29801 llava/train/train_deepfake.py ...
 ```
@@ -190,8 +190,8 @@ The `image_folder` parameter serves as the base path prefix for image keys.
 - `llava/train/train_deepfake.py`: Multi-modal training script for Stages 2 & 3
 - `llava/model/deepfake/M2F2Det/model.py`: Core M2F2Det architecture
 - `llava/model/llava_arch.py`: LLaVA base architecture (extended for deepfake detection)
-- `scripts/merge_lora_weights_deepfake.py`: Merges LoRA/delta weights with base models
-- `scripts/merge_lora_weights_deepfake_random.py`: Randomly initializes MLP layers for Stage 2
+- `scripts/utils/merge_lora_weights_deepfake.py`: Merges LoRA/delta weights with base models
+- `scripts/utils/merge_lora_weights_deepfake_random.py`: Randomly initializes MLP layers for Stage 2
 - `dataset/`: HDF5 dataset loaders for FF++ data
 - `utils/weights/`: Pre-trained CLIP encoder (`vision_tower.pth`) and detector weights
 
@@ -214,7 +214,7 @@ The three-stage training produces intermediate checkpoints that must be merged:
 5. **Stage-3-weights-Delta**: LoRA fine-tuned weights (delta format)
 6. **M2F2-Det**: Final merged model for inference
 
-Use `scripts/merge_lora_weights_deepfake.py` for merging operations.
+Use `scripts/utils/merge_lora_weights_deepfake.py` for merging operations.
 
 ## Gradio Demo
 

@@ -15,7 +15,7 @@ echo "=========================================="
 # Step 1: Run detection inference
 echo ""
 echo "[1/4] Running detection inference..."
-bash scripts/inference_kan_qlora_det.sh
+bash scripts/kan/inference_det.sh
 
 # Rename output for comparison
 mv outputs/DDVQA/DDVQA_det_c40.jsonl outputs/DDVQA/DDVQA_det_c40_kan.jsonl
@@ -23,7 +23,7 @@ mv outputs/DDVQA/DDVQA_det_c40.jsonl outputs/DDVQA/DDVQA_det_c40_kan.jsonl
 # Step 2: Run explanation inference
 echo ""
 echo "[2/4] Running explanation inference..."
-bash scripts/inference_kan_qlora_exp.sh
+bash scripts/kan/inference_exp.sh
 
 # Rename output for comparison
 mv outputs/DDVQA/DDVQA_exp_c40.jsonl outputs/DDVQA/DDVQA_exp_c40_kan.jsonl
@@ -50,7 +50,7 @@ echo "Evaluation Complete!"
 echo "=========================================="
 echo ""
 echo "To compare with original M2F2-Det, run:"
-echo "  bash scripts/eval_original.sh"
+echo "  bash scripts/eval/eval_original.sh"
 echo ""
 echo "Results saved to:"
 echo "  - outputs/DDVQA/DDVQA_det_c40_kan.jsonl"
