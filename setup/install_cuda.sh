@@ -1,5 +1,5 @@
 #!/bin/bash
-# CUDA 11.7 安装脚本
+# CUDA 12.1 安装脚本
 # 用法: bash setup/install_cuda.sh
 
 set -euo pipefail
@@ -23,36 +23,36 @@ log_warn() { echo -e "${YELLOW}[WARN]${RESET} $*"; }
 log_err()  { echo -e "${RED}[ERR ]${RESET} $*"; }
 
 # ============================================================
-# 检查是否已安装 CUDA 11.7
+# 检查是否已安装 CUDA 12.1
 # ============================================================
 check_existing_cuda() {
   log_step "检查现有 CUDA 安装"
 
-  if [ -d "/usr/local/cuda-11.7" ]; then
-    log_ok "CUDA 11.7 已安装在 /usr/local/cuda-11.7"
+  if [ -d "/usr/local/cuda-12.1" ]; then
+    log_ok "CUDA 12.1 已安装在 /usr/local/cuda-12.1"
 
     # 检查环境变量
-    if [ -n "${CUDA_HOME:-}" ] && [ "$CUDA_HOME" = "/usr/local/cuda-11.7" ]; then
+    if [ -n "${CUDA_HOME:-}" ] && [ "$CUDA_HOME" = "/usr/local/cuda-12.1" ]; then
       log_ok "CUDA_HOME 已正确设置"
       return 0
     else
       log_warn "CUDA_HOME 未设置或不正确"
-      log_info "请运行: export CUDA_HOME=/usr/local/cuda-11.7"
-      log_info "请运行: export PATH=/usr/local/cuda-11.7/bin:\$PATH"
-      log_info "请运行: export LD_LIBRARY_PATH=/usr/local/cuda-11.7/lib64:\$LD_LIBRARY_PATH"
+      log_info "请运行: export CUDA_HOME=/usr/local/cuda-12.1"
+      log_info "请运行: export PATH=/usr/local/cuda-12.1/bin:\$PATH"
+      log_info "请运行: export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:\$LD_LIBRARY_PATH"
       return 1
     fi
   fi
 
-  log_warn "未找到 CUDA 11.7 安装"
+  log_warn "未找到 CUDA 12.1 安装"
   return 1
 }
 
 # ============================================================
-# 安装 CUDA 11.7
+# 安装 CUDA 12.1
 # ============================================================
-install_cuda_11_7() {
-  log_step "安装 CUDA 11.7"
+install_cuda_12_1() {
+  log_step "安装 CUDA 12.1"
 
   # 检查系统架构
   ARCH=$(uname -m)
@@ -103,10 +103,10 @@ install_cuda_11_7() {
   sudo apt-get update -qq
 
   # 安装 CUDA 11.7
-  log_info "安装 CUDA 11.7 toolkit (这可能需要几分钟)..."
-  sudo apt-get install -y cuda-toolkit-11-7
+  log_info "安装 CUDA 12.1 toolkit (这可能需要几分钟)..."
+  sudo apt-get install -y cuda-toolkit-12-1
 
-  log_ok "CUDA 11.7 安装完成"
+  log_ok "CUDA 12.1 安装完成"
 
   # 清理临时文件
   rm -f /tmp/cuda-keyring_1.1-1_all.deb
@@ -119,24 +119,24 @@ setup_environment() {
   log_step "配置 CUDA 环境变量"
 
   # 添加到当前 shell
-  export CUDA_HOME=/usr/local/cuda-11.7
-  export PATH=/usr/local/cuda-11.7/bin:$PATH
-  export LD_LIBRARY_PATH=/usr/local/cuda-11.7/lib64:${LD_LIBRARY_PATH:-}
+  export CUDA_HOME=/usr/local/cuda-12.1
+  export PATH=/usr/local/cuda-12.1/bin:$PATH
+  export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:${LD_LIBRARY_PATH:-}
 
   log_ok "环境变量已设置 (当前 shell)"
 
   # 添加到 ~/.bashrc (如果不存在)
   BASHRC="$HOME/.bashrc"
 
-  if ! grep -q "CUDA_HOME=/usr/local/cuda-11.7" "$BASHRC" 2>/dev/null; then
+  if ! grep -q "CUDA_HOME=/usr/local/cuda-12.1" "$BASHRC" 2>/dev/null; then
     log_info "添加 CUDA 环境变量到 ~/.bashrc"
 
     cat >> "$BASHRC" <<'EOF'
 
-# CUDA 11.7 Environment Variables
-export CUDA_HOME=/usr/local/cuda-11.7
-export PATH=/usr/local/cuda-11.7/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-11.7/lib64:$LD_LIBRARY_PATH
+# CUDA 12.1 Environment Variables
+export CUDA_HOME=/usr/local/cuda-12.1
+export PATH=/usr/local/cuda-12.1/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH
 EOF
 
     log_ok "已添加到 ~/.bashrc (下次登录生效)"
@@ -161,10 +161,10 @@ verify_installation() {
   fi
 
   # 检查 CUDA 目录
-  if [ -d "/usr/local/cuda-11.7" ]; then
-    log_ok "CUDA 11.7 目录: /usr/local/cuda-11.7"
+  if [ -d "/usr/local/cuda-12.1" ]; then
+    log_ok "CUDA 12.1 目录: /usr/local/cuda-12.1"
   else
-    log_err "CUDA 11.7 目录不存在"
+    log_err "CUDA 12.1 目录不存在"
     return 1
   fi
 
@@ -176,7 +176,7 @@ verify_installation() {
   fi
 
   echo ""
-  log_ok "CUDA 11.7 安装验证成功!"
+  log_ok "CUDA 12.1 安装验证成功!"
 }
 
 # ============================================================
@@ -190,13 +190,13 @@ install_flash_attention() {
     return 1
   fi
 
-  log_info "使用 CUDA 11.7 编译 Flash Attention..."
+  log_info "使用 CUDA 12.1 编译 Flash Attention..."
   log_info "这可能需要 5-10 分钟..."
 
   # 确保环境变量设置
-  export CUDA_HOME=/usr/local/cuda-11.7
-  export PATH=/usr/local/cuda-11.7/bin:$PATH
-  export LD_LIBRARY_PATH=/usr/local/cuda-11.7/lib64:${LD_LIBRARY_PATH:-}
+  export CUDA_HOME=/usr/local/cuda-12.1
+  export PATH=/usr/local/cuda-12.1/bin:$PATH
+  export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:${LD_LIBRARY_PATH:-}
 
   # 安装 flash-attn
   pip install flash-attn==2.5.7 --no-build-isolation
@@ -215,12 +215,12 @@ install_flash_attention() {
 # ============================================================
 main() {
   echo "========================================"
-  echo "CUDA 11.7 安装工具"
+  echo "CUDA 12.1 安装工具"
   echo "========================================"
 
   # 检查是否已安装
   if check_existing_cuda; then
-    log_info "CUDA 11.7 已安装且配置正确"
+    log_info "CUDA 12.1 已安装且配置正确"
 
     read -p "是否重新配置环境变量? (y/N): " -n 1 -r
     echo
@@ -238,7 +238,7 @@ main() {
   fi
 
   # 安装 CUDA
-  install_cuda_11_7
+  install_cuda_12_1
 
   # 配置环境
   setup_environment
@@ -254,8 +254,8 @@ main() {
     install_flash_attention
   else
     log_info "稍后可运行以下命令安装 Flash Attention:"
-    log_info "  export CUDA_HOME=/usr/local/cuda-11.7"
-    log_info "  export PATH=/usr/local/cuda-11.7/bin:\$PATH"
+    log_info "  export CUDA_HOME=/usr/local/cuda-12.1"
+    log_info "  export PATH=/usr/local/cuda-12.1/bin:\$PATH"
     log_info "  pip install flash-attn==2.5.7 --no-build-isolation"
   fi
 
