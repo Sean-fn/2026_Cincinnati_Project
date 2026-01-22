@@ -24,8 +24,16 @@ case $ENV_TYPE in
     log_step "预装 flash-attn 依赖 (psutil)"
     pip install psutil
 
-    log_step "安装依赖 (requirements.txt)"
-    pip install -r requirements.txt --no-build-isolation
+    log_step "固定 NumPy 版本 (flash-attn 需要 numpy<2)"
+    pip install 'numpy==1.26.4'
+
+    log_step "安装 flash-attn 预编译轮子"
+    # 使用预编译的 wheel 避免需要 CUDA toolkit
+    pip install flash-attn==2.5.7 --no-build-isolation || \
+      pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.7/flash_attn-2.5.7+cu122torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+    log_step "安装依赖 (requirements.txt, 跳过 flash-attn)"
+    grep -v "flash-attn" requirements.txt | pip install -r /dev/stdin --no-build-isolation
 
     log_ok "venv 环境配置完成"
     echo "激活环境: source venv/bin/activate"
