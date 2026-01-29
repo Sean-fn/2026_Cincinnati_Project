@@ -49,9 +49,6 @@ CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --lora_r 64 \
     --lora_alpha 128 \
     --lora_dropout 0.05 \
-    --bits 4 \                              # Quantization: 4-bit (requires bitsandbytes). Remove this line for 16-bit training
-    --double_quant True \                   # Double quantization for additional compression
-    --quant_type nf4 \                      # Quantization type: nf4 (4-bit NormalFloat)
     --deepfake_projector_type efficient_kan \
     --kan_hidden_dim 128 \
     --kan_grid_size 5 \
@@ -70,10 +67,14 @@ CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --per_device_train_batch_size 6 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 20 \
-    --evaluation_strategy "no" \
+    --evaluation_strategy "steps" \
+    --eval_steps 100 \
     --save_strategy "steps" \
     --save_steps 100 \
-    --save_total_limit 2 \
+    --save_total_limit 3 \
+    --metric_for_best_model "eval_loss" \
+    --greater_is_better False \
+    --load_best_model_at_end True \
     --learning_rate 2e-5 \
     --mm_projector_lr 2e-5 \
     --weight_decay 0. \

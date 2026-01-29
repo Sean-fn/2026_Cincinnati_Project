@@ -32,6 +32,7 @@ import tokenizers
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN, DEFAULT_DEEPFAKE_TOKEN
 from torch.utils.data import Dataset
 from llava.train.llava_trainer import LLaVATrainer
+from transformers import EarlyStoppingCallback
 
 from llava import conversation as conversation_lib
 from llava.model import *
@@ -133,6 +134,14 @@ class TrainingArguments(transformers.TrainingArguments):
     lora_bias: str = "none"
     mm_projector_lr: Optional[float] = None
     group_by_modality_length: bool = field(default=False)
+    early_stopping_patience: int = field(
+        default=3,
+        metadata={"help": "Number of evaluation calls with no improvement before early stopping."}
+    )
+    val_ratio: float = field(
+        default=0.1,
+        metadata={"help": "Ratio of training data to use for validation."}
+    )
 
 
 def maybe_zero_3(param, ignore_status=False, name=None):
@@ -848,14 +857,35 @@ class DataCollatorForSupervisedDataset(object):
 
 
 def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
-                                data_args) -> Dict:
+                                data_args,
+                                val_ratio: float = 0.1) -> Dict:
     """Make dataset and collator for supervised fine-tuning."""
-    train_dataset = LazySupervisedDataset(tokenizer=tokenizer,
+    full_dataset = LazySupervisedDataset(tokenizer=tokenizer,
                                 data_path=data_args.data_path,
                                 data_args=data_args)
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
+
+    # Split into train and validation sets
+    if val_ratio > 0:
+        dataset_size = len(full_dataset)
+        val_size = int(dataset_size * val_ratio)
+        train_size = dataset_size - val_size
+
+        # Use torch random_split with a fixed seed for reproducibility
+        generator = torch.Generator().manual_seed(42)
+        train_dataset, val_dataset = torch.utils.data.random_split(
+            full_dataset,
+            [train_size, val_size],
+            generator=generator
+        )
+        rank0_print(f"Split dataset: {train_size} train, {val_size} validation")
+    else:
+        train_dataset = full_dataset
+        val_dataset = None
+        rank0_print("No validation split created")
+
     return dict(train_dataset=train_dataset,
-                eval_dataset=None,
+                eval_dataset=val_dataset,
                 data_collator=data_collator)
 
 
@@ -1085,20 +1115,28 @@ def train(attn_implementation=None):
     # for n, p in model.named_parameters():
     #     print(f"{n}: {p.dtype}")
     data_module = make_supervised_data_module(tokenizer=tokenizer,
-                                              data_args=data_args)
-    
+                                              data_args=data_args,
+                                              val_ratio=training_args.val_ratio)
+
     for p in model.deepfake_encoder.parameters():
         p.requires_grad = False
     for p in model.model.get_vision_tower().parameters():
         p.requires_grad = False
-        
+
+    # Add early stopping callback if validation dataset is available
+    callbacks = []
+    if data_module['eval_dataset'] is not None:
+        callbacks.append(EarlyStoppingCallback(early_stopping_patience=training_args.early_stopping_patience))
+        rank0_print(f"Early stopping enabled with patience={training_args.early_stopping_patience}")
+
     trainer = LLaVATrainer(model=model,
                     tokenizer=tokenizer,
                     args=training_args,
+                    callbacks=callbacks,
                     **data_module)
 
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
-        trainer.train(resume_from_checkpoint=False)
+        trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()
     trainer.save_state()

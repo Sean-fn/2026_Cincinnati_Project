@@ -37,10 +37,14 @@ deepspeed --include localhost:$CUDA_NUM llava/train/train_deepfake.py \
     --per_device_train_batch_size 20 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 1 \
-    --evaluation_strategy "no" \
+    --evaluation_strategy "steps" \
+    --eval_steps 1500 \
     --save_strategy "steps" \
     --save_steps 1500 \
-    --save_total_limit 1 \
+    --save_total_limit 3 \
+    --metric_for_best_model "eval_loss" \
+    --greater_is_better False \
+    --load_best_model_at_end True \
     --learning_rate 2e-5 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
