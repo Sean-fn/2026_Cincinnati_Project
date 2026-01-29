@@ -8,9 +8,15 @@
 
 set -e
 
-# Activate environment
-current_path=$(pwd)
-export PYTHONPATH="$current_path:$PYTHONPATH"
+# Get project root and setup environment
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
+# Source environment setup (handles venv activation, CUDA libraries, PYTHONPATH)
+source "$PROJECT_ROOT/setup/setup_env.sh"
 
 # Configuration
 CUDA_NUM=0
@@ -43,9 +49,9 @@ CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --lora_r 64 \
     --lora_alpha 128 \
     --lora_dropout 0.05 \
-    --bits 4 \
-    --double_quant True \
-    --quant_type nf4 \
+    --bits 4 \                              # Quantization: 4-bit (requires bitsandbytes). Remove this line for 16-bit training
+    --double_quant True \                   # Double quantization for additional compression
+    --quant_type nf4 \                      # Quantization type: nf4 (4-bit NormalFloat)
     --deepfake_projector_type efficient_kan \
     --kan_hidden_dim 128 \
     --kan_grid_size 5 \
