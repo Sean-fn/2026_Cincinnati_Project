@@ -1,10 +1,9 @@
 #!/bin/bash
 # Stage 2: KAN Projector Training Only
-# This script trains ONLY the Efficient KAN projector while keeping the LLM frozen.
-# This allows the KAN to learn optimal mapping from deepfake features to LLM embedding space.
+# This script trains ONLY the KAN-based deepfake projector while freezing the LLM.
+# The KAN projector learns to map binary detection outputs to LLM hidden space.
 #
-# Target GPU: RTX 4080 SUPER (16GB)
-# Estimated VRAM: ~8-10 GB
+# Estimated VRAM: ~10-12 GB
 
 set -e
 
@@ -14,7 +13,7 @@ export PYTHONPATH="$current_path:$PYTHONPATH"
 
 # Configuration
 CUDA_NUM=0
-MODEL_VERSION="./checkpoints/llava-1.5-7b-deepfake-rand-proj-v1"
+BASE_MODEL="./checkpoints/llava-v1.5-7b-deepfake-rand-proj-v1"
 DATA_PATH="./utils/DDVQA_split/c40/train_DDVQA_format.json"
 IMG_FOLDER="./utils/DDVQA_images/c40/train"
 OUTPUT_DIR="./checkpoints/llava-v1.5-7b-deepfake-kan-stage2"
@@ -27,15 +26,15 @@ mkdir -p $OUTPUT_DIR
 echo "========================================"
 echo "Stage 2: KAN Projector Training"
 echo "========================================"
-echo "Model: $MODEL_VERSION"
+echo "Base Model: $BASE_MODEL"
 echo "Output: $OUTPUT_DIR"
 echo "GPU: $CUDA_NUM"
 echo "Training: KAN Projector ONLY"
-echo "Frozen: LLM, MM Projector"
+echo "Frozen: LLM, Vision Tower, MM Projector"
 echo "========================================"
 
 CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
-    --model_name_or_path $MODEL_VERSION \
+    --model_name_or_path $BASE_MODEL \
     --version v1 \
     --data_path $DATA_PATH \
     --image_folder $IMG_FOLDER \
@@ -49,6 +48,7 @@ CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --tune_mm_mlp_adapter False \
     --tune_deepfake_mlp_adapter True \
     --freeze_backbone True \
+    --freeze_mm_mlp_adapter True \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \
     --mm_vision_select_feature cls_patch \
@@ -64,21 +64,23 @@ CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --save_strategy "steps" \
     --save_steps 100 \
     --save_total_limit 3 \
-    --learning_rate 2e-4 \
+    --learning_rate 5e-4 \
     --weight_decay 0.01 \
-    --warmup_ratio 0.05 \
+    --warmup_ratio 0.1 \
     --lr_scheduler_type "cosine" \
     --logging_steps 1 \
     --tf32 True \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
-    --lazy_preprocess True
+    --lazy_preprocess True \
+    --report_to none
 
 echo "========================================"
 echo "Stage 2 Training Completed!"
 echo "Output saved to: $OUTPUT_DIR"
 echo ""
-echo "Next step: Run Stage 3 to train LoRA"
+echo "Next Step:"
+echo "Run Stage 3 LoRA fine-tuning:"
 echo "  bash scripts/kan/stage_3_lora_finetune.sh"
 echo "========================================"
