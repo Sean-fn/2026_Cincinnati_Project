@@ -239,8 +239,8 @@ class LlavaLlamaForCausalLMDummy(LlamaForCausalLM, LlavaMetaForCausalLM):
             pos_prob = 0.5 * torch.rand((1, 1)).item() + 0.5 * label
             conditional_probs.append(torch.tensor([1 - pos_prob, pos_prob]))
         conditional_probs = torch.stack(conditional_probs, dim=0)
-        
-        print(f'Prob: {conditional_probs}')
+
+        # print(f'Prob: {conditional_probs}')
         out = conditional_probs.to(self.deepfake_projector[0].weight.dtype).unsqueeze(1).to(self.deepfake_projector[0].weight.device)    # [B, 1, 2]
 
         # out = self.deepfake_encoder(image_tensor, image_tensor).unsqueeze(1)

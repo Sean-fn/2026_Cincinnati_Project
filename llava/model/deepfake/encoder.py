@@ -102,7 +102,7 @@ class CLIP_DenseNet_Deepfake(nn.Module):
         batch_size, _, H, W = x.size()
         x = x.to(self.output.weight.dtype)
         y = self.deepfake_encoder(x)
-        print(f'Deepfake out: {torch.mean(y)}')
+        # print(f'Deepfake out: {torch.mean(y)}')
         y = self.avgpool2d(y).view(batch_size, -1)
         if self.clip_feature_type == 'cls':
             if 'image_cls' in deepfake_inputs:
@@ -121,10 +121,10 @@ class CLIP_DenseNet_Deepfake(nn.Module):
                 z = self.avgpool1d(z).view(batch_size, -1)
         else:
             raise ValueError(f'Unsupported clip feature type for deepfake encoder: {self.clip_feature_type}')
-        print(f'CLIP dense: {torch.mean(y)}')
-        print(f'CLIP clip: {torch.mean(z)}')
+        # print(f'CLIP dense: {torch.mean(y)}')
+        # print(f'CLIP clip: {torch.mean(z)}')
         out = torch.cat([y, z], dim=1)
         out = out.to(self.output.weight.dtype)
         out = self.output(out)
-        print(f'CLIP out: {out}')
+        # print(f'CLIP out: {out}')
         return out
