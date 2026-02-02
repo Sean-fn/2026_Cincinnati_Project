@@ -49,24 +49,24 @@ bash setup/python_env.sh venv
 bash setup/python_env.sh conda
 ```
 
-### 4. `install_cuda.sh` - CUDA 11.7 安装脚本
-自动安装 CUDA 11.7 toolkit,配置环境变量,并可选安装 Flash Attention。
+### 4. `install_cuda.sh` - CUDA 12.1 安装脚本
+自动安装 CUDA 12.1 toolkit,配置环境变量,并可选安装 Flash Attention。
 
 **使用方式**:
 ```bash
-# 自动安装 CUDA 11.7
+# 自动安装 CUDA 12.1
 bash setup/install_cuda.sh
 ```
 
 **功能**:
-- ✓ 检测并安装 CUDA 11.7
+- ✓ 检测并安装 CUDA 12.1
 - ✓ 自动配置环境变量 (CUDA_HOME, PATH, LD_LIBRARY_PATH)
 - ✓ 添加配置到 ~/.bashrc
 - ✓ 可选安装 Flash Attention 2.5.7
 - ✓ 支持 Ubuntu 20.04 和 22.04
 
 **重要提示**:
-- CUDA 11.7 是训练所必需的 (Flash Attention 要求 CUDA 11.6+)
+- CUDA 12.1 是训练所必需的 (Flash Attention 要求 CUDA 12.1+)
 - 安装后需要重新登录或 `source ~/.bashrc`
 - Flash Attention 编译需要 5-10 分钟
 
@@ -106,7 +106,7 @@ bash setup/download_weights.sh
 下载所有权重和数据集:
 
 ```bash
-# 1. 安装 CUDA 11.7
+# 1. 安装 CUDA 12.1
 bash setup/install_cuda.sh
 
 # 2. 设置 Python 环境
@@ -215,7 +215,7 @@ pip install -r requirements.txt
 
 ### CUDA 相关问题
 
-#### CUDA 11.7 安装失败
+#### CUDA 12.1 安装失败
 ```bash
 # 检查系统版本
 lsb_release -a
@@ -224,15 +224,15 @@ lsb_release -a
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
 sudo apt-get update
-sudo apt-get install -y cuda-toolkit-11-7
+sudo apt-get install -y cuda-toolkit-12-1
 ```
 
 #### Flash Attention 编译失败
 ```bash
 # 确保 CUDA 环境变量正确
-export CUDA_HOME=/usr/local/cuda-11.7
-export PATH=/usr/local/cuda-11.7/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-11.7/lib64:$LD_LIBRARY_PATH
+export CUDA_HOME=/usr/local/cuda-12.1
+export PATH=/usr/local/cuda-12.1/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH
 
 # 安装 ninja (加速编译)
 sudo apt-get install -y ninja-build
@@ -247,7 +247,7 @@ pip install flash-attn==2.5.7 --no-build-isolation
 nvcc --version
 
 # 检查 CUDA 目录
-ls -la /usr/local/cuda-11.7
+ls -la /usr/local/cuda-12.1
 
 # 检查环境变量
 echo $CUDA_HOME

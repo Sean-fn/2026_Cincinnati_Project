@@ -17,7 +17,7 @@ conda activate M2F2_det
 ```
 
 Key dependencies:
-- PyTorch 2.0.1 with CUDA 11.7 (`torch==2.0.1+cu117`)
+- PyTorch 2.1.2 with CUDA 12.1 (`torch==2.1.2+cu121`)
 - Torchvision 0.16.2
 - LLaVA 1.2.2.post1
 - Transformers 4.37.0

@@ -7,7 +7,7 @@
 #   2. 安装 Python 依赖 (requirements.txt)
 #   3. 下载预训练权重 (Stage-1, Stage-2, LLaVA 等)
 #   4. 下载 DDVQA 数据集
-#   5. 安装 CUDA 11.7 (可选但推荐)
+#   5. 安装 CUDA 12.1 (可选但推荐)
 #   6. 验证环境配置
 #
 # 用法:
@@ -96,7 +96,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "选项:"
       echo "  --env venv|conda    选择环境类型 (默认: venv)"
-      echo "  --skip-cuda         跳过 CUDA 11.7 安装"
+      echo "  --skip-cuda         跳过 CUDA 12.1 安装"
       echo "  --skip-download     跳过权重和数据集下载"
       echo "  -h, --help          显示帮助信息"
       echo ""
@@ -198,32 +198,32 @@ else
 fi
 
 # ============================================================
-# 3. 安装 CUDA 11.7
+# 3. 安装 CUDA 12.1
 # ============================================================
 if [ "$SKIP_CUDA" = false ]; then
-  log_step "3/6 安装 CUDA 11.7"
+  log_step "3/6 安装 CUDA 12.1"
 
-  if [ -d "/usr/local/cuda-11.7" ]; then
-    log_ok "CUDA 11.7 已安装"
+  if [ -d "/usr/local/cuda-12.1" ]; then
+    log_ok "CUDA 12.1 已安装"
 
     # 检查环境变量
-    if [ -n "${CUDA_HOME:-}" ] && [ "$CUDA_HOME" = "/usr/local/cuda-11.7" ]; then
+    if [ -n "${CUDA_HOME:-}" ] && [ "$CUDA_HOME" = "/usr/local/cuda-12.1" ]; then
       log_ok "CUDA_HOME 已配置"
     else
-      log_warn "CUDA_HOME 未配置,请运行: export CUDA_HOME=/usr/local/cuda-11.7"
+      log_warn "CUDA_HOME 未配置,请运行: export CUDA_HOME=/usr/local/cuda-12.1"
     fi
   else
-    log_warn "CUDA 11.7 未安装"
+    log_warn "CUDA 12.1 未安装"
 
     if [ -f "setup/install_cuda.sh" ]; then
-      log_info "CUDA 11.7 是训练所必需的 (Flash Attention 要求)"
+      log_info "CUDA 12.1 是训练所必需的 (Flash Attention 要求)"
       bash setup/install_cuda.sh
     else
       log_warn "setup/install_cuda.sh 未找到"
     fi
   fi
 else
-  log_step "3/6 跳过 CUDA 安装 (--skip-cuda)"
+  log_step "3/6 跳过 CUDA 12.1 安装 (--skip-cuda)"
 fi
 
 # ============================================================
@@ -322,11 +322,12 @@ echo "  - 快速开始: ${BOLD}QUICKSTART.md${RESET}"
 echo "  - 设置文档: ${BOLD}setup/README.md${RESET}"
 echo "  - 项目文档: ${BOLD}CLAUDE.md${RESET}"
 
-if [ "$SKIP_CUDA" = false ] && [ ! -d "/usr/local/cuda-11.7" ]; then
+if [ "$SKIP_CUDA" = false ] && [ ! -d "/usr/local/cuda-12.1" ]; then
   echo ""
-  log_warn "提醒: CUDA 11.7 未安装"
+  log_warn "提醒: CUDA 12.1 未安装"
+  echo "  - Flash Attention 已安装（预编译 wheel，cu122 版本）"
+  echo "  - 训练时需要 CUDA 12.1+ runtime 支持 Flash Attention"
   echo "  - 安装命令: ${BOLD}bash setup/install_cuda.sh${RESET}"
-  echo "  - 训练需要 CUDA 11.7 和 Flash Attention"
 fi
 
 echo ""

@@ -102,7 +102,7 @@ install_cuda_12_1() {
   log_info "更新 apt 缓存..."
   sudo apt-get update -qq
 
-  # 安装 CUDA 11.7
+  # 安装 CUDA 12.1
   log_info "安装 CUDA 12.1 toolkit (这可能需要几分钟)..."
   sudo apt-get install -y cuda-toolkit-12-1
 

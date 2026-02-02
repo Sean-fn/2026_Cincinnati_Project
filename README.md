@@ -56,7 +56,7 @@ FF++_Face2Face_c40.h5
 **DDVQA**: we have provide a c40 version DDVQA in ```utils/DDVQA_images/c40.zip``` or one can download it from the DDVQA's [[Project Page]](https://github.com/Reality-Defender/Research-DD-VQA).
 
 ### Environment
-We build on the environment based on LLaVA-v1.5, such as ```pytorch==2.0.1+cu117 torchvision==0.16.2```. It can be created by
+We build on the environment based on LLaVA-v1.5, such as ```pytorch==2.1.2+cu121 torchvision==0.16.2+cu121```. It can be created by
 ```bash
 conda env create -f environment.yml
 ```
