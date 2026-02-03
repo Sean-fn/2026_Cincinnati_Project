@@ -49,9 +49,9 @@ CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --lora_r 64 \
     --lora_alpha 128 \
     --lora_dropout 0.05 \
-    --bits 4 \                              # Quantization: 4-bit (requires bitsandbytes). Remove this line for 16-bit training
-    --double_quant True \                   # Double quantization for additional compression
-    --quant_type nf4 \                      # Quantization type: nf4 (4-bit NormalFloat)
+    --bits 4 \                              
+    --double_quant True \                   
+    --quant_type nf4 \                      
     --deepfake_projector_type efficient_kan \
     --kan_hidden_dim 128 \
     --kan_grid_size 5 \
