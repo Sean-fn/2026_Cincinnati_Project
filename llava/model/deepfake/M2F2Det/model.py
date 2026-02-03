@@ -175,7 +175,7 @@ class M2F2Det(nn.Module):
             clip_vision_features = self.clip_vision_encoder(new_embeds.to(self.clip_vision_encoder.model.device))    # [B, 577, 1024]
         if use_cached_clip_text_features:
             if self.cached_clip_text_features is None:
-                self.cached_clip_text_features = clip_text_features = self.clip_text_encoder()
+                self.cached_clip_text_features = clip_text_features = self.clip_text_encoder().detach()
             else:
                 clip_text_features = self.cached_clip_text_features
         else:        
@@ -191,8 +191,8 @@ class M2F2Det(nn.Module):
         deepfake_features = self.deepfake_proj(deepfake_features)
         clip_vision_cls = self.clip_vision_alpha * clip_vision_cls
         clip_scores = self.clip_text_alpha * clip_scores
-        clip_vision_cls.to(self.deepfake_dtype)
-        clip_scores.to(self.deepfake_dtype)
+        clip_vision_cls = clip_vision_cls.to(self.deepfake_dtype)
+        clip_scores = clip_scores.to(self.deepfake_dtype)
         features = torch.cat([clip_scores, clip_vision_cls, deepfake_features], dim=-1)
         output = self.output(features)
         return output

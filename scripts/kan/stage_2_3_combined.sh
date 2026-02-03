@@ -38,6 +38,9 @@ echo "Output: $OUTPUT_DIR"
 echo "GPU: $CUDA_NUM"
 echo "========================================"
 
+# Fix VRAM fragmentation from mixed-precision dtype conversions
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
 CUDA_VISIBLE_DEVICES=$CUDA_NUM python llava/train/train_deepfake.py \
     --model_name_or_path $MODEL_VERSION \
     --version v1 \

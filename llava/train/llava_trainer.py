@@ -151,6 +151,17 @@ class LLaVATrainer(Trainer):
         else:
             return super()._get_train_sampler()
 
+    def training_step(self, model, inputs):
+        """
+        Override training_step to add CUDA cache cleanup after optimizer steps.
+        This helps prevent VRAM fragmentation from mixed-precision operations.
+        """
+        loss = super().training_step(model, inputs)
+        # Clear CUDA cache after each optimizer step (when gradients are actually applied)
+        if self.state.global_step % self.args.gradient_accumulation_steps == 0:
+            torch.cuda.empty_cache()
+        return loss
+
     def create_optimizer(self):
         """
         Setup the optimizer.
