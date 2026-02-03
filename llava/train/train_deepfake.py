@@ -1039,9 +1039,17 @@ def train(attn_implementation=None):
     for p in model.deepfake_encoder.parameters():
         p.requires_grad = False
     ################
-    # Here's a significant issue: KAN only activated when deepfake_projector recreated from scratch 
-    # only when model is loaded with 4-bit or 8-bit quantization.
+    # Fix: Write model_args to model.config before re-creating projector
+    # This ensures KAN parameters are properly read during projector initialization
     ###############
+    model.config.deepfake_projector_type = model_args.deepfake_projector_type
+    model.config.kan_hidden_dim = model_args.kan_hidden_dim
+    model.config.kan_grid_size = model_args.kan_grid_size
+    model.config.kan_spline_order = model_args.kan_spline_order
+    print(f'Updated model.config with projector_type={model_args.deepfake_projector_type}, '
+          f'kan_hidden_dim={model_args.kan_hidden_dim}, '
+          f'kan_grid_size={model_args.kan_grid_size}, '
+          f'kan_spline_order={model_args.kan_spline_order}')
 
     # deepfake projectors - re-create if on meta device (happens with 4-bit quantization)
     if training_args.bits in [4, 8]:
