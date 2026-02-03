@@ -1051,13 +1051,31 @@ def train(attn_implementation=None):
           f'kan_grid_size={model_args.kan_grid_size}, '
           f'kan_spline_order={model_args.kan_spline_order}')
 
-    # deepfake projectors - re-create if on meta device (happens with 4-bit quantization)
+    # deepfake projectors - re-create if on meta device OR if projector type changed
     if training_args.bits in [4, 8]:
+        from llava.model.multimodal_projector.builder import build_multimodal_projector
+        from llava.model.multimodal_projector.efficient_kan import EfficientKANLinear
+
         first_proj_param = next(model.deepfake_projector.parameters())
+        needs_rebuild = False
+
+        # Check if on meta device
         if first_proj_param.device.type == 'meta':
-            print('Deepfake projector is on meta device, re-initializing...')
-            from llava.model.multimodal_projector.builder import build_multimodal_projector
-            projector_type = getattr(model.config, 'deepfake_projector_type', 'mlp2x_gelu')
+            print('Deepfake projector is on meta device, needs re-initialization')
+            needs_rebuild = True
+
+        # Check if projector type mismatch (e.g., want KAN but have MLP)
+        target_type = getattr(model.config, 'deepfake_projector_type', 'mlp2x_gelu')
+        current_is_kan = isinstance(model.deepfake_projector, EfficientKANLinear)
+        target_is_kan = (target_type == 'efficient_kan')
+
+        if current_is_kan != target_is_kan:
+            print(f'Projector type mismatch: current={current_is_kan}, target={target_is_kan}, needs rebuild')
+            needs_rebuild = True
+
+        if needs_rebuild:
+            print(f'Re-building deepfake projector to type: {target_type}')
+            projector_type = target_type
             kan_hidden_dim = getattr(model.config, 'kan_hidden_dim', 128)
             kan_grid_size = getattr(model.config, 'kan_grid_size', 5)
             kan_spline_order = getattr(model.config, 'kan_spline_order', 3)
@@ -1069,7 +1087,7 @@ def train(attn_implementation=None):
                 kan_grid_size=kan_grid_size,
                 kan_spline_order=kan_spline_order,
             ).to(dtype=compute_dtype, device=training_args.device)
-            print(f'Re-created deepfake projector: {type(model.deepfake_projector).__name__}')
+            print(f'✓ Re-created deepfake projector: {type(model.deepfake_projector).__name__}')
 
     if model_args.tune_deepfake_mlp_adapter:
         for p in model.deepfake_projector.parameters():
