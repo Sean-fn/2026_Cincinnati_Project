@@ -1,11 +1,11 @@
 #!/bin/bash
-# M2F2_Det 权重下载主脚本
-# 用法: bash setup/download_weights.sh [--config FILE] [--quiet]
+# M2F2_Det weights download script
+# Usage: bash setup/download_weights.sh [--config FILE] [--quiet]
 
 set -euo pipefail
 
 # ============================================================
-# 参数解析
+# Argument parsing
 # ============================================================
 CONFIG_FILE="setup/download_config.sh"
 QUIET_MODE=false
@@ -19,17 +19,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ============================================================
-# 加载配置
+# Load configuration
 # ============================================================
 if [ ! -f "$CONFIG_FILE" ]; then
-  echo "错误: 配置文件不存在: $CONFIG_FILE"
+  echo "Error: config file not found: $CONFIG_FILE"
   exit 1
 fi
 
 source "$CONFIG_FILE"
 
 # ============================================================
-# 彩色输出函数
+# Colored output helpers
 # ============================================================
 if [ "$QUIET_MODE" = false ] && [ -t 1 ]; then
   BOLD="$(tput bold)"; RESET="$(tput sgr0)"
@@ -45,46 +45,46 @@ log_ok()   { echo -e "${GREEN}[ OK ]${RESET} $*"; }
 log_warn() { echo -e "${YELLOW}[WARN]${RESET} $*"; }
 
 # ============================================================
-# 下载函数
+# Download helpers
 # ============================================================
 
-# 检查依赖
+# Check dependencies
 check_dependencies() {
-  log_step "检查下载依赖"
+  log_step "Checking download dependencies"
 
   if ! command -v python3 &>/dev/null; then
-    echo "错误: 未找到 python3"
+    echo "Error: python3 not found"
     exit 1
   fi
 
-  # 安装 huggingface_hub
+  # Install huggingface_hub
   if ! python3 -c "import huggingface_hub" &>/dev/null 2>&1; then
-    log_info "安装 huggingface_hub..."
+    log_info "Installing huggingface_hub..."
     pip install -q huggingface_hub
   fi
 
-  log_ok "依赖检查完成"
+  log_ok "Dependency check complete"
 }
 
-# 创建目录结构
+# Create directory structure
 create_directories() {
-  log_step "创建目录结构"
+  log_step "Creating directory structure"
   mkdir -p "$CHECKPOINT_DIR"
   mkdir -p "$WEIGHTS_DIR"
   mkdir -p "$DATASET_DIR"
-  log_ok "目录创建完成"
+  log_ok "Directories created"
 }
 
-# 下载 Stage-1 检测器权重
+# Download Stage-1 detector weights
 download_stage1_weights() {
   if [ "$DOWNLOAD_STAGE1_WEIGHTS" = false ]; then
-    log_info "跳过 Stage-1 权重下载"
+    log_info "Skipping Stage-1 weights"
     return
   fi
 
-  log_step "下载 Stage-1 检测器权重 (1.7GB)"
+  log_step "Downloading Stage-1 detector weights (1.7GB)"
 
-  python3 - <<EOF
+  python3 - <<EOF_PY
 from huggingface_hub import hf_hub_download
 import os
 
@@ -95,25 +95,25 @@ try:
         local_dir="${WEIGHTS_DIR%/*}",
         local_dir_use_symlinks=False
     )
-    print("✓ Stage-1 权重下载完成")
+    print("✓ Stage-1 weights downloaded")
 except Exception as e:
-    print(f"❌ 下载失败: {e}")
+    print(f"❌ Download failed: {e}")
     exit(1)
-EOF
+EOF_PY
 
-  log_ok "Stage-1 权重: ${WEIGHTS_DIR}/M2F2_Det_densenet121.pth"
+  log_ok "Stage-1 weights: ${WEIGHTS_DIR}/M2F2_Det_densenet121.pth"
 }
 
-# 下载 Stage-2 初始化权重
+# Download Stage-2 init weights
 download_stage2_init_weights() {
   if [ "$DOWNLOAD_STAGE2_INIT_WEIGHTS" = false ]; then
-    log_info "跳过 Stage-2 初始化权重下载"
+    log_info "Skipping Stage-2 init weights"
     return
   fi
 
-  log_step "下载 Stage-2 初始化权重 (14GB, 可能需要较长时间)"
+  log_step "Downloading Stage-2 init weights (14GB, may take a while)"
 
-  python3 - <<EOF
+  python3 - <<EOF_PY
 from huggingface_hub import snapshot_download
 import os
 
@@ -125,25 +125,25 @@ try:
         local_dir_use_symlinks=False,
         resume_download=True
     )
-    print("✓ Stage-2 初始化权重下载完成")
+    print("✓ Stage-2 init weights downloaded")
 except Exception as e:
-    print(f"❌ 下载失败: {e}")
+    print(f"❌ Download failed: {e}")
     exit(1)
-EOF
+EOF_PY
 
-  log_ok "Stage-2 权重: ${CHECKPOINT_DIR}/llava-1.5-7b-deepfake-rand-proj-v1/"
+  log_ok "Stage-2 weights: ${CHECKPOINT_DIR}/llava-1.5-7b-deepfake-rand-proj-v1/"
 }
 
-# 下载 LLaVA 基础模型
+# Download LLaVA base model
 download_llava_base() {
   if [ "$DOWNLOAD_LLAVA_BASE" = false ]; then
-    log_info "跳过 LLaVA 基础模型下载"
+    log_info "Skipping LLaVA base model"
     return
   fi
 
-  log_step "下载 LLaVA-1.5-7b 基础模型 (13GB)"
+  log_step "Downloading LLaVA-1.5-7b base model (13GB)"
 
-  python3 - <<EOF
+  python3 - <<EOF_PY
 from huggingface_hub import snapshot_download
 
 try:
@@ -153,29 +153,29 @@ try:
         local_dir_use_symlinks=False,
         resume_download=True
     )
-    print("✓ LLaVA 基础模型下载完成")
+    print("✓ LLaVA base model downloaded")
 except Exception as e:
-    print(f"❌ 下载失败: {e}")
+    print(f"❌ Download failed: {e}")
     exit(1)
-EOF
+EOF_PY
 
-  log_ok "LLaVA 基础模型: ${CHECKPOINT_DIR}/llava-v1.5-7b/"
+  log_ok "LLaVA base model: ${CHECKPOINT_DIR}/llava-v1.5-7b/"
 }
 
-# 下载推理模型
+# Download inference model
 download_inference_model() {
   if [ "$DOWNLOAD_INFERENCE_MODEL" = false ]; then
-    log_info "跳过推理模型下载"
+    log_info "Skipping inference model"
     return
   fi
 
-  log_step "下载推理模型 (14GB)"
+  log_step "Downloading inference model (14GB)"
 
-  # 检查 git lfs
+  # Check git-lfs
   if ! command -v git-lfs &>/dev/null; then
-    log_warn "未安装 git-lfs, 尝试使用 huggingface_hub..."
+    log_warn "git-lfs not installed, trying huggingface_hub..."
 
-    python3 - <<EOF
+    python3 - <<EOF_PY
 from huggingface_hub import snapshot_download
 
 try:
@@ -185,107 +185,107 @@ try:
         local_dir_use_symlinks=False,
         resume_download=True
     )
-    print("✓ 推理模型下载完成")
+    print("✓ Inference model downloaded")
 except Exception as e:
-    print(f"❌ 下载失败: {e}")
+    print(f"❌ Download failed: {e}")
     exit(1)
-EOF
+EOF_PY
   else
     cd "$CHECKPOINT_DIR"
     git lfs clone "https://huggingface.co/${HF_INFERENCE_REPO}"
     cd - > /dev/null
   fi
 
-  log_ok "推理模型: ${CHECKPOINT_DIR}/llava-v1.5-7b-M2F2-Det/"
+  log_ok "Inference model: ${CHECKPOINT_DIR}/llava-v1.5-7b-M2F2-Det/"
 }
 
-# 下载 CLIP 视觉编码器 (Google Drive)
+# Download CLIP vision encoder (Google Drive)
 download_clip_encoder() {
   if [ "$DOWNLOAD_CLIP_ENCODER" = false ]; then
-    log_info "跳过 CLIP 编码器下载"
+    log_info "Skipping CLIP encoder"
     return
   fi
 
-  log_step "下载 CLIP 视觉编码器 (400MB)"
+  log_step "Downloading CLIP vision encoder (400MB)"
 
-  # 检查 gdown
+  # Check gdown
   if ! command -v gdown &>/dev/null; then
-    log_info "安装 gdown..."
+    log_info "Installing gdown..."
     pip install -q gdown
   fi
 
   gdown "https://drive.google.com/uc?id=${GDRIVE_CLIP_ENCODER_ID}" \
     -O "${WEIGHTS_DIR}/vision_tower.pth"
 
-  log_ok "CLIP 编码器: ${WEIGHTS_DIR}/vision_tower.pth"
+  log_ok "CLIP encoder: ${WEIGHTS_DIR}/vision_tower.pth"
 }
 
-# 下载 DDVQA 数据集
+# Download DDVQA dataset
 download_ddvqa_dataset() {
   if [ "$DOWNLOAD_DDVQA_DATASET" = false ]; then
-    log_info "跳过 DDVQA 数据集下载"
+    log_info "Skipping DDVQA dataset"
     return
   fi
 
-  log_step "处理 DDVQA 数据集"
+  log_step "Preparing DDVQA dataset"
 
-  # 检查是否已解压
+  # Check if already unpacked
   if [ -d "${DATASET_DIR}/c40/train" ] && [ -d "${DATASET_DIR}/c40/test" ]; then
-    log_ok "DDVQA c40 数据集已存在"
+    log_ok "DDVQA c40 dataset already present"
     return
   fi
 
-  # 方案1: 解压本地 zip 文件
+  # Option 1: unzip local zip file
   if [ -f "${DDVQA_LOCAL_ZIP}" ]; then
-    log_info "发现本地 c40.zip, 正在解压..."
+    log_info "Found local c40.zip, extracting..."
     unzip -q "${DDVQA_LOCAL_ZIP}" -d "${DATASET_DIR}/"
-    log_ok "DDVQA 数据集: ${DATASET_DIR}/c40/"
+    log_ok "DDVQA dataset: ${DATASET_DIR}/c40/"
     return
   fi
 
-  # 方案2: 从 Google Drive 下载
-  log_info "从 Google Drive 下载 DDVQA 数据集..."
+  # Option 2: download from Google Drive
+  log_info "Downloading DDVQA dataset from Google Drive..."
 
-  # 检查并安装 gdown
+  # Check and install gdown
   if ! command -v gdown &>/dev/null; then
-    log_info "安装 gdown..."
+    log_info "Installing gdown..."
     pip install -q gdown
   fi
 
-  # 创建目标目录
+  # Create target directory
   mkdir -p "$(dirname "${DDVQA_LOCAL_ZIP}")"
 
-  # 下载 c40.zip
-  log_info "下载中... (这可能需要几分钟)"
+  # Download c40.zip
+  log_info "Downloading... (this may take a few minutes)"
   gdown --fuzzy "${DDVQA_GDRIVE_URL}" -O "${DDVQA_LOCAL_ZIP}"
 
-  # 解压
+  # Extract
   if [ -f "${DDVQA_LOCAL_ZIP}" ]; then
-    log_info "正在解压 c40.zip..."
+    log_info "Extracting c40.zip..."
     unzip -q "${DDVQA_LOCAL_ZIP}" -d "${DATASET_DIR}/"
-    log_ok "DDVQA 数据集: ${DATASET_DIR}/c40/"
+    log_ok "DDVQA dataset: ${DATASET_DIR}/c40/"
   else
-    log_warn "Google Drive 下载失败"
-    log_info "请手动下载: ${DDVQA_GDRIVE_URL}"
-    log_info "并将 c40.zip 放置在: ${DDVQA_LOCAL_ZIP}"
+    log_warn "Google Drive download failed"
+    log_info "Please download manually: ${DDVQA_GDRIVE_URL}"
+    log_info "and place c40.zip at: ${DDVQA_LOCAL_ZIP}"
     return 1
   fi
 }
 
 # ============================================================
-# 验证下载
+# Verify downloads
 # ============================================================
 verify_downloads() {
-  log_step "验证下载文件"
+  log_step "Verifying downloaded files"
 
   local all_ok=true
 
   # Stage-1
   if [ "$DOWNLOAD_STAGE1_WEIGHTS" = true ]; then
     if [ -f "${WEIGHTS_DIR}/M2F2_Det_densenet121.pth" ]; then
-      log_ok "Stage-1 检测器"
+      log_ok "Stage-1 detector"
     else
-      log_warn "缺失: Stage-1 检测器"
+      log_warn "Missing: Stage-1 detector"
       all_ok=false
     fi
   fi
@@ -293,9 +293,9 @@ verify_downloads() {
   # Stage-2
   if [ "$DOWNLOAD_STAGE2_INIT_WEIGHTS" = true ]; then
     if [ -d "${CHECKPOINT_DIR}/llava-1.5-7b-deepfake-rand-proj-v1" ]; then
-      log_ok "Stage-2 初始化权重"
+      log_ok "Stage-2 init weights"
     else
-      log_warn "缺失: Stage-2 初始化权重"
+      log_warn "Missing: Stage-2 init weights"
       all_ok=false
     fi
   fi
@@ -303,47 +303,47 @@ verify_downloads() {
   # LLaVA Base
   if [ "$DOWNLOAD_LLAVA_BASE" = true ]; then
     if [ -d "${CHECKPOINT_DIR}/llava-v1.5-7b" ]; then
-      log_ok "LLaVA 基础模型"
+      log_ok "LLaVA base model"
     else
-      log_warn "缺失: LLaVA 基础模型"
+      log_warn "Missing: LLaVA base model"
       all_ok=false
     fi
   fi
 
-  # 推理模型
+  # Inference model
   if [ "$DOWNLOAD_INFERENCE_MODEL" = true ]; then
     if [ -d "${CHECKPOINT_DIR}/llava-v1.5-7b-M2F2-Det" ]; then
-      log_ok "推理模型"
+      log_ok "Inference model"
     else
-      log_warn "缺失: 推理模型"
+      log_warn "Missing: inference model"
       all_ok=false
     fi
   fi
 
-  # DDVQA 数据集
+  # DDVQA dataset
   if [ "$DOWNLOAD_DDVQA_DATASET" = true ]; then
     if [ -d "${DATASET_DIR}/c40" ]; then
       local train_count=$(find "${DATASET_DIR}/c40/train" -type f 2>/dev/null | wc -l)
-      log_ok "DDVQA 数据集 (${train_count} 训练图片)"
+      log_ok "DDVQA dataset (${train_count} training images)"
     else
-      log_warn "缺失: DDVQA 数据集"
+      log_warn "Missing: DDVQA dataset"
       all_ok=false
     fi
   fi
 
   if [ "$all_ok" = true ]; then
-    echo -e "\n${BOLD}${GREEN}✅ 所有文件下载完成!${RESET}"
+    echo -e "\n${BOLD}${GREEN}✅ All files downloaded successfully!${RESET}"
   else
-    echo -e "\n${BOLD}${YELLOW}⚠️  部分文件下载失败${RESET}"
+    echo -e "\n${BOLD}${YELLOW}⚠️  Some files failed to download${RESET}"
   fi
 }
 
 # ============================================================
-# 主流程
+# Main flow
 # ============================================================
 main() {
   echo "========================================"
-  echo "M2F2_Det 权重下载工具"
+  echo "M2F2_Det Weights Download Tool"
   echo "========================================"
 
   check_dependencies
@@ -360,7 +360,7 @@ main() {
 
   echo ""
   echo "========================================"
-  echo "下一步: bash scripts/verify_env.sh"
+  echo "Next step: bash scripts/verify_env.sh"
   echo "========================================"
 }
 

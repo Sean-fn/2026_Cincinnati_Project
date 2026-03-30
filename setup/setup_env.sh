@@ -32,7 +32,7 @@ if [ -d "$PROJECT_ROOT/venv" ]; then
     PYTHON_VER=$(python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')")
     VENV_SITE_PACKAGES="$PROJECT_ROOT/venv/lib/$PYTHON_VER/site-packages"
 
-    # PyTorch and NVIDIA CUDA libraries (包含所有必要的库)
+    # PyTorch and NVIDIA CUDA libraries (all required libs)
     export LD_LIBRARY_PATH=\
 ${VENV_SITE_PACKAGES}/torch/lib:\
 ${VENV_SITE_PACKAGES}/nvidia/cublas/lib:\

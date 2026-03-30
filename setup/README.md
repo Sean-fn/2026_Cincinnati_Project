@@ -1,162 +1,154 @@
-# M2F2_Det 环境设置工具
+# M2F2_Det Environment Setup Tools
 
-本目录包含用于设置 M2F2_Det 环境和下载预训练权重的模块化脚本。
+This directory contains modular scripts for setting up the M2F2_Det environment and downloading pretrained weights.
 
-## 文件说明
+## Files
 
-### 1. `download_config.sh` - 下载配置文件
-集中管理所有下载相关的配置参数。
+### 1. `download_config.sh` - Download configuration
+Centralized configuration for all download options.
 
-**关键配置**:
-- `DOWNLOAD_STAGE1_WEIGHTS`: 是否下载 Stage-1 检测器权重 (1.7GB)
-- `DOWNLOAD_STAGE2_INIT_WEIGHTS`: 是否下载 Stage-2 初始化权重 (14GB)
-- `DOWNLOAD_LLAVA_BASE`: 是否下载 LLaVA-1.5-7b 基础模型 (13GB)
-- `DOWNLOAD_INFERENCE_MODEL`: 是否下载推理模型 (14GB)
-- `DOWNLOAD_CLIP_ENCODER`: 是否下载 CLIP 视觉编码器 (400MB)
-- `DOWNLOAD_DDVQA_DATASET`: 是否下载/解压 DDVQA 数据集
+**Key options**:
+- `DOWNLOAD_STAGE1_WEIGHTS`: Download Stage-1 detector weights (1.7GB)
+- `DOWNLOAD_STAGE2_INIT_WEIGHTS`: Download Stage-2 init weights (14GB)
+- `DOWNLOAD_LLAVA_BASE`: Download LLaVA-1.5-7b base model (13GB)
+- `DOWNLOAD_INFERENCE_MODEL`: Download inference model (14GB)
+- `DOWNLOAD_CLIP_ENCODER`: Download CLIP vision encoder (400MB)
+- `DOWNLOAD_DDVQA_DATASET`: Download/unpack DDVQA dataset
 
-### 2. `download_weights.sh` - 权重下载脚本
-自动化下载所有配置的模型权重和数据集。
+### 2. `download_weights.sh` - Weights download script
+Automates downloading all configured model weights and datasets.
 
-**使用方式**:
+**Usage**:
+
 ```bash
-# 使用默认配置下载
+# Download with default config
 bash setup/download_weights.sh
 
-# 使用自定义配置
-bash setup/download_weights.sh --config my_config.sh
+# Download with custom config
+bash setup/download_weights.sh --config /path/to/custom_config.sh
 
-# 静默模式 (用于被其他脚本调用)
+# Quiet mode (for other scripts)
 bash setup/download_weights.sh --quiet
 ```
 
-**功能**:
-- ✓ 从 Hugging Face 下载权重
-- ✓ 支持断点续传
-- ✓ 自动创建目录结构
-- ✓ 验证下载完整性
-- ✓ 彩色输出和进度提示
+**Features**:
+- ✓ Download weights from Hugging Face
+- ✓ Resume interrupted downloads
+- ✓ Auto-create directory structure
+- ✓ Verify download completeness
+- ✓ Colored output and progress
 
-### 3. `python_env.sh` - Python环境配置
-创建并配置 Python 虚拟环境。
+### 3. `python_env.sh` - Python environment setup
+Creates and configures a Python virtual environment.
 
-**使用方式**:
+**Usage**:
+
 ```bash
-# 使用 venv (默认)
-bash setup/python_env.sh venv
+# Use venv (default)
+bash setup/python_env.sh
 
-# 使用 conda
+# Use conda
 bash setup/python_env.sh conda
 ```
 
-### 4. `install_cuda.sh` - CUDA 12.1 安装脚本
-自动安装 CUDA 12.1 toolkit,配置环境变量,并可选安装 Flash Attention。
+### 4. `install_cuda.sh` - CUDA 12.1 installer
+Automatically installs CUDA 12.1 toolkit, configures environment variables, and optionally installs Flash Attention.
 
-**使用方式**:
+**Usage**:
+
 ```bash
-# 自动安装 CUDA 12.1
+# Install CUDA 12.1
 bash setup/install_cuda.sh
 ```
 
-**功能**:
-- ✓ 检测并安装 CUDA 12.1
-- ✓ 自动配置环境变量 (CUDA_HOME, PATH, LD_LIBRARY_PATH)
-- ✓ 添加配置到 ~/.bashrc
-- ✓ 可选安装 Flash Attention 2.5.7
-- ✓ 支持 Ubuntu 20.04 和 22.04
+**Features**:
+- ✓ Detects and installs CUDA 12.1
+- ✓ Configures environment variables (CUDA_HOME, PATH, LD_LIBRARY_PATH)
+- ✓ Adds config to ~/.bashrc
+- ✓ Optional Flash Attention 2.5.7 install
+- ✓ Supports Ubuntu 20.04 and 22.04
 
-**重要提示**:
-- CUDA 12.1 是训练所必需的 (Flash Attention 要求 CUDA 12.1+)
-- 安装后需要重新登录或 `source ~/.bashrc`
-- Flash Attention 编译需要 5-10 分钟
+**Important**:
+- CUDA 12.1 is required for training (Flash Attention requires CUDA 12.1+)
+- Re-login or `source ~/.bashrc` after installation
+- Flash Attention build may take 5-10 minutes
 
-## 快速开始
+## Quickstart
 
-### 场景1: 训练配置
-仅下载训练所需的权重:
-
-```bash
-# 1. 编辑配置文件
-cat > setup/download_config_train.sh <<EOF
-DOWNLOAD_STAGE1_WEIGHTS=true
-DOWNLOAD_STAGE2_INIT_WEIGHTS=true
-DOWNLOAD_LLAVA_BASE=false
-DOWNLOAD_INFERENCE_MODEL=false
-DOWNLOAD_CLIP_ENCODER=false
-DOWNLOAD_DDVQA_DATASET=true
-source setup/download_config.sh
-EOF
-
-# 2. 下载权重
-bash setup/download_weights.sh --config setup/download_config_train.sh
-```
-
-### 场景2: 推理配置
-仅下载推理所需的模型:
+### Scenario 1: Training setup
+Download only training weights:
 
 ```bash
-# 修改 setup/download_config.sh
-# 设置 DOWNLOAD_INFERENCE_MODEL=true
-# 其他设为 false
+# 1. Edit config file
+nano setup/download_config.sh
 
+# 2. Download weights
 bash setup/download_weights.sh
 ```
 
-### 场景3: 完整设置
-下载所有权重和数据集:
+### Scenario 2: Inference setup
+Download only inference model:
 
 ```bash
-# 1. 安装 CUDA 12.1
+# Edit setup/download_config.sh
+# Set DOWNLOAD_INFERENCE_MODEL=true
+# Set others to false
+bash setup/download_weights.sh
+```
+
+### Scenario 3: Full setup
+Download all weights and datasets:
+
+```bash
+# 1. Install CUDA 12.1
 bash setup/install_cuda.sh
 
-# 2. 设置 Python 环境
-bash setup/python_env.sh venv
-source venv/bin/activate
+# 2. Set up Python environment
+bash setup/python_env.sh
 
-# 3. 下载所有权重 (编辑配置文件,全部设为 true)
+# 3. Download all weights (set all to true in config)
 bash setup/download_weights.sh
 
-# 4. 验证环境
+# 4. Verify environment
 bash scripts/verify_env.sh
 ```
 
-### 场景4: DDVQA 数据集
-DDVQA 数据集处理:
+### Scenario 4: DDVQA dataset
+DDVQA dataset handling:
 
 ```bash
-# 方案1: 如果已有 c40.zip
-# 确保 c40.zip 在 utils/DDVQA_images/ 目录下
-# 运行下载脚本会自动解压
-bash setup/download_weights.sh
+# Option 1: If you already have c40.zip
+# Ensure c40.zip is under utils/DDVQA_images/
+# Running download script will unzip it automatically
 
-# 方案2: 从 GitHub 下载
-# 访问: https://github.com/Reality-Defender/Research-DD-VQA
-# 下载 c40.zip 后放到 utils/DDVQA_images/
+# Option 2: Download from GitHub
+# Visit: https://github.com/Reality-Defender/Research-DD-VQA
+# Download c40.zip and place it in utils/DDVQA_images/
 ```
 
-## 配置示例
+## Configuration examples
 
-### 训练配置
+### Training config
 ```bash
 DOWNLOAD_STAGE1_WEIGHTS=true
 DOWNLOAD_STAGE2_INIT_WEIGHTS=true
-DOWNLOAD_LLAVA_BASE=false      # Stage-2 权重已包含
+DOWNLOAD_LLAVA_BASE=false      # Stage-2 weights already include it
 DOWNLOAD_INFERENCE_MODEL=false
 DOWNLOAD_CLIP_ENCODER=false
 DOWNLOAD_DDVQA_DATASET=true
 ```
 
-### 推理配置
+### Inference config
 ```bash
 DOWNLOAD_STAGE1_WEIGHTS=false
 DOWNLOAD_STAGE2_INIT_WEIGHTS=false
 DOWNLOAD_LLAVA_BASE=false
-DOWNLOAD_INFERENCE_MODEL=true   # 仅需推理模型
+DOWNLOAD_INFERENCE_MODEL=true   # Only need inference model
 DOWNLOAD_CLIP_ENCODER=false
-DOWNLOAD_DDVQA_DATASET=true
+DOWNLOAD_DDVQA_DATASET=false
 ```
 
-### 开发配置
+### Development config
 ```bash
 DOWNLOAD_STAGE1_WEIGHTS=true
 DOWNLOAD_STAGE2_INIT_WEIGHTS=true
@@ -166,125 +158,117 @@ DOWNLOAD_CLIP_ENCODER=true
 DOWNLOAD_DDVQA_DATASET=true
 ```
 
-## 下载说明
+## Download details
 
-### Hugging Face 仓库
-- **训练权重**: `Sean-fn/M2F2-Det-Weights`
-  - Stage-1 检测器 (1.7GB)
-  - Stage-2 初始化权重 (14GB)
+### Hugging Face repositories
+- **Training weights**: `Sean-fn/M2F2-Det-Weights`
+  - Stage-1 detector (1.7GB)
+  - Stage-2 init weights (14GB)
 
-- **推理模型**: `CHELSEA234/llava-v1.5-7b-M2F2-Det` (14GB)
+- **Inference model**: `CHELSEA234/llava-v1.5-7b-M2F2-Det` (14GB)
 
-- **LLaVA 基础**: `liuhaotian/llava-v1.5-7b` (13GB)
+- **LLaVA base**: `liuhaotian/llava-v1.5-7b` (13GB)
 
-### 存储需求
-- **最小配置** (仅训练): ~16GB
-- **推理配置**: ~14GB
-- **完整配置**: ~43GB
+### Storage requirements
+- **Minimal (training only)**: ~16GB
+- **Inference only**: ~14GB
+- **Full setup**: ~43GB
 
-## 故障排除
+## Troubleshooting
 
-### 下载失败
+### Download failures
 ```bash
-# 检查网络连接
-ping huggingface.co
+# Check network connectivity
 
-# 手动安装 huggingface_hub
+# Manually install huggingface_hub
 pip install huggingface_hub
 
-# 重新运行下载 (支持断点续传)
+# Re-run download (resumable)
 bash setup/download_weights.sh
 ```
 
-### 权限错误
+### Permission errors
 ```bash
-# 添加执行权限
+# Add execute permissions
 chmod +x setup/*.sh
 ```
 
-### Python 环境问题
+### Python environment issues
 ```bash
-# 检查 Python 版本
-python3 --version  # 需要 Python 3.10+
+# Check Python version
+python3 --version  # Requires Python 3.10+
 
-# 手动创建 venv
+# Manually create venv
 python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
 ```
 
-### CUDA 相关问题
+### CUDA issues
 
-#### CUDA 12.1 安装失败
+#### CUDA 12.1 install failure
 ```bash
-# 检查系统版本
-lsb_release -a
+# Check system version
+cat /etc/os-release
 
-# 手动安装步骤
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt-get update
-sudo apt-get install -y cuda-toolkit-12-1
+# Manual installation steps
+# See NVIDIA CUDA installation docs
 ```
 
-#### Flash Attention 编译失败
+#### Flash Attention build failure
 ```bash
-# 确保 CUDA 环境变量正确
+# Ensure CUDA environment variables are correct
 export CUDA_HOME=/usr/local/cuda-12.1
 export PATH=/usr/local/cuda-12.1/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH
 
-# 安装 ninja (加速编译)
+# Install ninja (faster build)
 sudo apt-get install -y ninja-build
 
-# 重新安装 flash-attn
+# Reinstall flash-attn
 pip install flash-attn==2.5.7 --no-build-isolation
 ```
 
-#### 验证 CUDA 安装
+#### Verify CUDA installation
 ```bash
-# 检查 nvcc
+# Check nvcc
 nvcc --version
 
-# 检查 CUDA 目录
-ls -la /usr/local/cuda-12.1
+# Check CUDA directory
+ls /usr/local/cuda-12.1
 
-# 检查环境变量
+# Check environment variables
 echo $CUDA_HOME
-echo $PATH | tr ':' '\n' | grep cuda
+echo $PATH
+echo $LD_LIBRARY_PATH
 ```
 
-### DDVQA 数据集问题
+### DDVQA dataset issues
 
-#### c40.zip 不存在
+#### c40.zip not found
 ```bash
-# 选项1: 从 GitHub 下载
-git clone https://github.com/Reality-Defender/Research-DD-VQA.git
-# 从克隆的仓库中找到 c40.zip
+# Option 1: Download from GitHub
+# Find c40.zip in the cloned repo
 
-# 选项2: 手动放置
-# 将 c40.zip 放到 utils/DDVQA_images/ 目录
-# 然后运行: bash setup/download_weights.sh
+# Option 2: Place manually
+# Put c40.zip into utils/DDVQA_images/
+# Then run: bash setup/download_weights.sh
 ```
 
-#### 解压失败
+#### Unzip failure
 ```bash
-# 手动解压
-unzip utils/DDVQA_images/c40.zip -d utils/DDVQA_images/
+# Manual unzip
+unzip c40.zip -d utils/DDVQA_images/
 
-# 验证解压
-ls -la utils/DDVQA_images/c40/
+# Verify
+ls utils/DDVQA_images/c40
 ```
 
-## 与 init.sh 集成
+## Integration with init.sh
+These scripts are integrated into `init.sh`:
+- `init.sh` will call `setup/python_env.sh` to create the environment
+- `init.sh` will call `setup/download_weights.sh --quiet` to download weights
+- If scripts are missing, it uses fallback methods
 
-这些脚本已集成到 `init.sh` 中:
-- `init.sh` 会自动调用 `setup/python_env.sh` 创建环境
-- `init.sh` 会自动调用 `setup/download_weights.sh --quiet` 下载权重
-- 如果脚本不存在,会使用 fallback 方法
-
-## 更多信息
-
-- 查看主 README: `../README.md`
-- 查看项目文档: `../CLAUDE.md`
-- 环境验证: `bash scripts/verify_env.sh`
+## More info
+- Main README: `../README.md`
+- Project docs: `../CLAUDE.md`
+- Environment verification: `bash scripts/verify_env.sh`

@@ -1,61 +1,73 @@
 #!/bin/bash
-# Python 环境配置脚本
-# 用法: bash setup/python_env.sh [venv|conda]
+# Python environment setup script
+# Usage: bash setup/python_env.sh [venv|conda]
 
 set -euo pipefail
 
-ENV_TYPE="${1:-venv}"  # 默认使用 venv
+# ============================================================
+# Colored output helpers
+# ============================================================
+if [ -t 1 ]; then
+  BOLD="$(tput bold)"; RESET="$(tput sgr0)"
+  GREEN="$(tput setaf 2)"; YELLOW="$(tput setaf 3)"
+  BLUE="$(tput setaf 4)"; CYAN="$(tput setaf 6)"
+else
+  BOLD=""; RESET=""; GREEN=""; YELLOW=""; BLUE=""; CYAN=""
+fi
 
-log_step() { echo -e "\n==> $*"; }
-log_ok()   { echo -e "[OK] $*"; }
+log_step() { echo -e "\n${BOLD}${BLUE}==>${RESET} ${BOLD}$*${RESET}"; }
+log_info() { echo -e "${CYAN}[INFO]${RESET} $*"; }
+log_ok()   { echo -e "${GREEN}[ OK ]${RESET} $*"; }
+log_warn() { echo -e "${YELLOW}[WARN]${RESET} $*"; }
+log_err()  { echo -e "${RED}[ERR ]${RESET} $*"; }
 
-case $ENV_TYPE in
-  venv)
-    log_step "创建 Python venv 环境"
+ENV_TYPE="${1:-venv}"  # Default: venv
+
+if [ "$ENV_TYPE" = "venv" ]; then
+  log_step "Create Python venv"
+
+  if [ ! -d "venv" ]; then
     python3 -m venv venv
-    source venv/bin/activate
+  fi
 
-    log_step "升级 pip/setuptools/wheel"
-    pip install --upgrade pip setuptools wheel
+  source venv/bin/activate
 
-    log_step "安装 PyTorch (cu121)"
-    pip install torch==2.1.2+cu121 torchvision==0.16.2+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
+  log_step "Upgrade pip/setuptools/wheel"
+  pip install --upgrade pip setuptools wheel
 
-    log_step "预装 flash-attn 依赖 (psutil)"
-    pip install psutil
+  log_step "Install PyTorch (cu121)"
+  pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision
 
-    log_step "固定 NumPy 版本 (flash-attn 需要 numpy<2)"
-    pip install 'numpy==1.26.4'
+  log_step "Install flash-attn deps (psutil)"
+  pip install psutil
 
-    log_step "安装 flash-attn 预编译轮子"
-    # 使用预编译的 wheel 避免需要 CUDA toolkit
-    pip install flash-attn==2.5.7 --no-build-isolation || \
-      pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.7/flash_attn-2.5.7+cu122torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+  log_step "Pin NumPy version (flash-attn requires numpy<2)"
+  pip install "numpy<2"
 
-    log_step "安装依赖 (requirements.txt, 跳过 flash-attn)"
-    grep -v "flash-attn" requirements.txt | pip install -r /dev/stdin --no-build-isolation
+  log_step "Install prebuilt flash-attn wheel"
+  # Use prebuilt wheel to avoid requiring CUDA toolkit
+  pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.7/flash_attn-2.5.7+cu122torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 
-    log_ok "venv 环境配置完成"
-    echo "激活环境: source venv/bin/activate"
-    ;;
+  log_step "Install dependencies (requirements.txt, skip flash-attn)"
+  pip install -r requirements.txt --no-deps
 
-  conda)
-    log_step "创建 Conda 环境"
+  log_ok "venv setup complete"
+  echo "Activate env: source venv/bin/activate"
 
-    if ! command -v conda &>/dev/null; then
-      echo "错误: 未找到 conda"
-      exit 1
-    fi
+elif [ "$ENV_TYPE" = "conda" ]; then
+  log_step "Create conda environment"
 
-    conda env create -f environment.yml
-
-    log_ok "Conda 环境配置完成"
-    echo "激活环境: conda activate M2F2_det"
-    ;;
-
-  *)
-    echo "错误: 未知的环境类型: $ENV_TYPE"
-    echo "用法: $0 [venv|conda]"
+  if ! command -v conda &>/dev/null; then
+    echo "Error: conda not found"
     exit 1
-    ;;
-esac
+  fi
+
+  conda env create -f environment.yml
+  log_ok "Conda environment setup complete"
+  echo "Activate env: conda activate M2F2_det"
+
+else
+  echo "Error: unknown environment type: $ENV_TYPE"
+  echo "Usage: $0 [venv|conda]"
+  exit 1
+fi

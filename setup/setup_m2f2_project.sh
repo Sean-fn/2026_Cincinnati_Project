@@ -1,23 +1,23 @@
 #!/bin/bash
 # ============================================================
-# M2F2_Det 项目环境设置脚本
+# M2F2_Det project environment setup script
 #
-# 功能:
-#   1. 创建 Python 虚拟环境 (venv 或 conda)
-#   2. 安装 Python 依赖 (requirements.txt)
-#   3. 下载预训练权重 (Stage-1, Stage-2, LLaVA 等)
-#   4. 下载 DDVQA 数据集
-#   5. 安装 CUDA 12.1 (可选但推荐)
-#   6. 验证环境配置
+# Features:
+#   1. Create Python virtual environment (venv or conda)
+#   2. Install Python dependencies (requirements.txt)
+#   3. Download pretrained weights (Stage-1, Stage-2, LLaVA, etc.)
+#   4. Download DDVQA dataset
+#   5. Install CUDA 12.1 (optional but recommended)
+#   6. Verify environment configuration
 #
-# 用法:
+# Usage:
 #   bash setup/setup_m2f2_project.sh [--env venv|conda] [--skip-cuda] [--skip-download]
 # ============================================================
 
 set -euo pipefail
 
 # ============================================================
-# 彩色输出函数
+# Colored output helpers
 # ============================================================
 if [ -t 1 ]; then
   BOLD="$(tput bold)"; DIM="$(tput dim)"; RESET="$(tput sgr0)"
@@ -71,9 +71,9 @@ run_spin() {
 trap 'log_err "Failed at line $LINENO: $BASH_COMMAND"' ERR
 
 # ============================================================
-# 参数解析
+# Argument parsing
 # ============================================================
-ENV_TYPE="venv"          # 默认使用 venv
+ENV_TYPE="venv"          # Default: venv
 SKIP_CUDA=false
 SKIP_DOWNLOAD=false
 
@@ -92,36 +92,36 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      echo "用法: $0 [OPTIONS]"
+      echo "Usage: $0 [OPTIONS]"
       echo ""
-      echo "选项:"
-      echo "  --env venv|conda    选择环境类型 (默认: venv)"
-      echo "  --skip-cuda         跳过 CUDA 12.1 安装"
-      echo "  --skip-download     跳过权重和数据集下载"
-      echo "  -h, --help          显示帮助信息"
+      echo "Options:"
+      echo "  --env venv|conda    Choose environment type (default: venv)"
+      echo "  --skip-cuda         Skip CUDA 12.1 installation"
+      echo "  --skip-download     Skip weights and dataset download"
+      echo "  -h, --help          Show help"
       echo ""
-      echo "示例:"
-      echo "  $0                          # 使用默认配置"
-      echo "  $0 --env conda              # 使用 conda 环境"
-      echo "  $0 --skip-cuda              # 跳过 CUDA 安装"
-      echo "  $0 --env venv --skip-download  # 仅设置环境,不下载"
+      echo "Examples:"
+      echo "  $0                          # Use default configuration"
+      echo "  $0 --env conda              # Use conda environment"
+      echo "  $0 --skip-cuda              # Skip CUDA installation"
+      echo "  $0 --env venv --skip-download  # Setup env only, no downloads"
       exit 0
       ;;
     *)
-      log_err "未知选项: $1"
-      echo "使用 --help 查看帮助"
+      log_err "Unknown option: $1"
+      echo "Use --help to see options"
       exit 1
       ;;
   esac
 done
 
 # ============================================================
-# 检查脚本位置
+# Locate project root
 # ============================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-log_info "项目根目录: $PROJECT_ROOT"
+log_info "Project root: $PROJECT_ROOT"
 cd "$PROJECT_ROOT"
 
 # ============================================================
@@ -129,139 +129,139 @@ cd "$PROJECT_ROOT"
 # ============================================================
 echo ""
 echo "========================================"
-echo "M2F2_Det 项目环境设置"
+echo "M2F2_Det Project Environment Setup"
 echo "========================================"
 echo ""
-log_info "配置选项:"
-echo "  - Python 环境: $ENV_TYPE"
-echo "  - 跳过 CUDA: $SKIP_CUDA"
-echo "  - 跳过下载: $SKIP_DOWNLOAD"
+log_info "Configuration:"
+echo "  - Python env: $ENV_TYPE"
+echo "  - Skip CUDA: $SKIP_CUDA"
+echo "  - Skip download: $SKIP_DOWNLOAD"
 echo ""
 
 # ============================================================
-# 1. 创建 Python 环境
+# 1. Create Python environment
 # ============================================================
-log_step "1/6 创建 Python 环境 ($ENV_TYPE)"
+log_step "1/6 Create Python environment ($ENV_TYPE)"
 
 if [ -f "setup/python_env.sh" ]; then
   run_spin "setup Python environment" bash setup/python_env.sh "$ENV_TYPE"
 else
-  log_warn "setup/python_env.sh 未找到, 使用默认方式"
+  log_warn "setup/python_env.sh not found, using fallback"
 
   if [ "$ENV_TYPE" = "venv" ]; then
     if [ -d "venv" ]; then
-      log_ok "venv 环境已存在"
+      log_ok "venv already exists"
     else
       run_spin "create venv" python3 -m venv venv
     fi
 
-    log_info "激活 venv..."
+    log_info "Activating venv..."
     source venv/bin/activate
 
     run_spin "upgrade pip" pip install --upgrade pip
     run_spin "install requirements" pip install -r requirements.txt
   elif [ "$ENV_TYPE" = "conda" ]; then
     if ! command -v conda &>/dev/null; then
-      log_err "conda 未找到,请先安装 Anaconda/Miniconda"
+      log_err "conda not found, install Anaconda/Miniconda first"
       exit 1
     fi
 
     run_spin "create conda env" conda env create -f environment.yml
-    log_ok "Conda 环境创建完成"
-    log_info "请手动激活: conda activate M2F2_det"
+    log_ok "Conda environment created"
+    log_info "Activate manually: conda activate M2F2_det"
   else
-    log_err "不支持的环境类型: $ENV_TYPE"
+    log_err "Unsupported environment type: $ENV_TYPE"
     exit 1
   fi
 fi
 
 # ============================================================
-# 2. 下载预训练权重和数据集
+# 2. Download pretrained weights and datasets
 # ============================================================
 if [ "$SKIP_DOWNLOAD" = false ]; then
-  log_step "2/6 下载预训练权重和数据集"
+  log_step "2/6 Download pretrained weights and datasets"
 
   if [ -f "setup/download_weights.sh" ]; then
     bash setup/download_weights.sh
   else
-    log_warn "setup/download_weights.sh 未找到"
+    log_warn "setup/download_weights.sh not found"
 
     if [ -f "scripts/download_from_huggingface.sh" ]; then
-      log_info "使用旧版下载脚本"
+      log_info "Using legacy download script"
       run_spin "download weights" bash scripts/download_from_huggingface.sh "Sean-fn"
     else
-      log_err "未找到任何下载脚本"
+      log_err "No download script found"
     fi
   fi
 else
-  log_step "2/6 跳过下载 (--skip-download)"
+  log_step "2/6 Skip downloads (--skip-download)"
 fi
 
 # ============================================================
-# 3. 安装 CUDA 12.1
+# 3. Install CUDA 12.1
 # ============================================================
 if [ "$SKIP_CUDA" = false ]; then
-  log_step "3/6 安装 CUDA 12.1"
+  log_step "3/6 Install CUDA 12.1"
 
   if [ -d "/usr/local/cuda-12.1" ]; then
-    log_ok "CUDA 12.1 已安装"
+    log_ok "CUDA 12.1 is installed"
 
-    # 检查环境变量
+    # Check environment variables
     if [ -n "${CUDA_HOME:-}" ] && [ "$CUDA_HOME" = "/usr/local/cuda-12.1" ]; then
-      log_ok "CUDA_HOME 已配置"
+      log_ok "CUDA_HOME is configured"
     else
-      log_warn "CUDA_HOME 未配置,请运行: export CUDA_HOME=/usr/local/cuda-12.1"
+      log_warn "CUDA_HOME not configured. Run: export CUDA_HOME=/usr/local/cuda-12.1"
     fi
   else
-    log_warn "CUDA 12.1 未安装"
+    log_warn "CUDA 12.1 not installed"
 
     if [ -f "setup/install_cuda.sh" ]; then
-      log_info "CUDA 12.1 是训练所必需的 (Flash Attention 要求)"
+      log_info "CUDA 12.1 is required for training (Flash Attention requirement)"
       bash setup/install_cuda.sh
     else
-      log_warn "setup/install_cuda.sh 未找到"
+      log_warn "setup/install_cuda.sh not found"
     fi
   fi
 else
-  log_step "3/6 跳过 CUDA 12.1 安装 (--skip-cuda)"
+  log_step "3/6 Skip CUDA 12.1 installation (--skip-cuda)"
 fi
 
 # ============================================================
-# 4. 验证环境
+# 4. Verify environment
 # ============================================================
-log_step "4/6 验证环境配置"
+log_step "4/6 Verify environment"
 
 if [ -f "scripts/verify_env.sh" ]; then
   bash scripts/verify_env.sh
 else
-  log_warn "scripts/verify_env.sh 未找到,跳过验证"
+  log_warn "scripts/verify_env.sh not found, skipping verification"
 
-  # 简单验证
-  log_info "基本检查:"
+  # Minimal checks
+  log_info "Basic checks:"
 
   if command -v python3 &>/dev/null; then
     log_ok "Python: $(python3 --version)"
   else
-    log_err "Python3 未找到"
+    log_err "Python3 not found"
   fi
 
   if python3 -c "import torch" 2>/dev/null; then
-    log_ok "PyTorch 已安装"
+    log_ok "PyTorch is installed"
   else
-    log_warn "PyTorch 未安装或导入失败"
+    log_warn "PyTorch not installed or failed to import"
   fi
 
   if python3 -c "import transformers" 2>/dev/null; then
-    log_ok "Transformers 已安装"
+    log_ok "Transformers is installed"
   else
-    log_warn "Transformers 未安装或导入失败"
+    log_warn "Transformers not installed or failed to import"
   fi
 fi
 
 # ============================================================
-# 5. 检查关键文件
+# 5. Check key files
 # ============================================================
-log_step "5/6 检查关键文件和目录"
+log_step "5/6 Check key files and directories"
 
 check_path() {
   local path="$1"
@@ -270,64 +270,64 @@ check_path() {
   if [ -e "$path" ]; then
     log_ok "$name: $path"
   else
-    log_warn "$name 缺失: $path"
+    log_warn "Missing $name: $path"
   fi
 }
 
-check_path "checkpoints/llava-1.5-7b-deepfake-rand-proj-v1" "Stage-2 初始化权重"
-check_path "utils/weights/M2F2_Det_densenet121.pth" "Stage-1 检测器"
-check_path "utils/DDVQA_images/c40" "DDVQA 数据集"
-check_path "requirements.txt" "Python 依赖列表"
-check_path "environment.yml" "Conda 环境配置"
+check_path "checkpoints/llava-1.5-7b-deepfake-rand-proj-v1" "Stage-2 init weights"
+check_path "utils/weights/M2F2_Det_densenet121.pth" "Stage-1 detector"
+check_path "utils/DDVQA_images/c40" "DDVQA dataset"
+check_path "requirements.txt" "Python requirements"
+check_path "environment.yml" "Conda environment config"
 
 # ============================================================
-# 6. 完成总结
+# 6. Summary
 # ============================================================
-log_step "6/6 设置完成"
+log_step "6/6 Setup complete"
 
 echo ""
 echo "========================================"
-echo -e "${BOLD}${GREEN}✅ M2F2_Det 项目环境设置完成!${RESET}"
+echo -e "${BOLD}${GREEN}✅ M2F2_Det environment setup complete!${RESET}"
 echo "========================================"
 echo ""
 
-log_info "环境配置:"
+log_info "Environment:"
 if [ "$ENV_TYPE" = "venv" ]; then
-  echo "  - Python 环境: venv"
-  echo "  - 激活命令: ${BOLD}source venv/bin/activate${RESET}"
+  echo "  - Python env: venv"
+  echo "  - Activate: ${BOLD}source venv/bin/activate${RESET}"
 elif [ "$ENV_TYPE" = "conda" ]; then
-  echo "  - Python 环境: conda"
-  echo "  - 激活命令: ${BOLD}conda activate M2F2_det${RESET}"
+  echo "  - Python env: conda"
+  echo "  - Activate: ${BOLD}conda activate M2F2_det${RESET}"
 fi
 
 echo ""
-log_info "训练流程:"
-echo "  1) Stage-1 训练: ${BOLD}bash stage_1_train.sh${RESET}"
-echo "  2) Stage-2 训练: ${BOLD}bash stage_2_train.sh${RESET}"
-echo "  3) Stage-3 训练: ${BOLD}bash stage_3_train.sh${RESET}"
+log_info "Training:"
+echo "  1) Stage-1 training: ${BOLD}bash stage_1_train.sh${RESET}"
+echo "  2) Stage-2 training: ${BOLD}bash stage_2_train.sh${RESET}"
+echo "  3) Stage-3 training: ${BOLD}bash stage_3_train.sh${RESET}"
 
 echo ""
-log_info "推理流程:"
-echo "  1) 检测推理: ${BOLD}bash stage_3_inference_det.sh${RESET}"
-echo "  2) 解释生成: ${BOLD}bash stage_3_inference_exp.sh${RESET}"
-echo "  3) 评估结果: ${BOLD}python eval/eval_judgement.py${RESET}"
+log_info "Inference:"
+echo "  1) Detection inference: ${BOLD}bash stage_3_inference_det.sh${RESET}"
+echo "  2) Explanation generation: ${BOLD}bash stage_3_inference_exp.sh${RESET}"
+echo "  3) Evaluate results: ${BOLD}python eval/eval_judgement.py${RESET}"
 
 echo ""
-log_info "低显存训练 (KAN + QLoRA):"
-echo "  - 运行命令: ${BOLD}bash scripts/kan/stage_2_3_combined.sh${RESET}"
+log_info "Low VRAM training (KAN + QLoRA):"
+echo "  - Run: ${BOLD}bash scripts/kan/stage_2_3_combined.sh${RESET}"
 
 echo ""
-log_info "文档资源:"
-echo "  - 快速开始: ${BOLD}QUICKSTART.md${RESET}"
-echo "  - 设置文档: ${BOLD}setup/README.md${RESET}"
-echo "  - 项目文档: ${BOLD}CLAUDE.md${RESET}"
+log_info "Docs:"
+echo "  - Quickstart: ${BOLD}QUICKSTART.md${RESET}"
+echo "  - Setup docs: ${BOLD}setup/README.md${RESET}"
+echo "  - Project docs: ${BOLD}CLAUDE.md${RESET}"
 
 if [ "$SKIP_CUDA" = false ] && [ ! -d "/usr/local/cuda-12.1" ]; then
   echo ""
-  log_warn "提醒: CUDA 12.1 未安装"
-  echo "  - Flash Attention 已安装（预编译 wheel，cu122 版本）"
-  echo "  - 训练时需要 CUDA 12.1+ runtime 支持 Flash Attention"
-  echo "  - 安装命令: ${BOLD}bash setup/install_cuda.sh${RESET}"
+  log_warn "Reminder: CUDA 12.1 is not installed"
+  echo "  - Flash Attention installed (prebuilt wheel, cu122)"
+  echo "  - Training requires CUDA 12.1+ runtime for Flash Attention"
+  echo "  - Install: ${BOLD}bash setup/install_cuda.sh${RESET}"
 fi
 
 echo ""
